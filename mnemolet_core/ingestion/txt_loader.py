@@ -1,5 +1,5 @@
 from pathlib import Path
-from utils import hash_file
+from .utils import hash_file
 
 
 def load_txt_files(dir: str) -> list[dict]:
