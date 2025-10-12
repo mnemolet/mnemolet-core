@@ -3,6 +3,7 @@ from pathlib import Path
 from mnemolet_core.ingestion.txt_loader import load_txt_files
 from mnemolet_core.ingestion.utils import hash_file
 
+
 def test_load_txt_files():
     with tempfile.TemporaryDirectory() as tmpdir:
         tmp_path = Path(tmpdir)
