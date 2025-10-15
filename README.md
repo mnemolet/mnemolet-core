@@ -15,3 +15,21 @@ system that runs entirely **locally**: no API keys, no cloud.
 - Retrieve top-k most relevant chunks for a query
 - Generate answers using a local LLM (via [Ollama](https://ollama.ai) or compatible API)
 - Provide a clean command-line interface (`ingest`, `query`)
+
+## Run Qdrant
+
+with docker:
+
+```
+docker run -p 6333:6333 \
+    -v $(pwd)/qdrant_storage:/qdrant/storage \
+    qdrant/qdrant
+```
+
+with podman:
+
+```
+podman run -p 6333:6333 \
+    -v ./qdrant_storage:/qdrant/storage \
+    docker.io/qdrant/qdrant
+```
