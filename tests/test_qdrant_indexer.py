@@ -1,4 +1,3 @@
-import pytest
 from unittest.mock import MagicMock, patch
 from mnemolet_core.indexing.qdrant_indexer import QdrantIndexer
 
