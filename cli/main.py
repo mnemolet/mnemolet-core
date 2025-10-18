@@ -4,6 +4,7 @@ from mnemolet_core.ingestion.txt_loader import load_txt_files
 from mnemolet_core.ingestion.preprocessor import chunk_text
 from mnemolet_core.embeddings.local_llm_embed import embed_texts
 from mnemolet_core.indexing.qdrant_indexer import QdrantIndexer
+from mnemolet_core.query.retriever import QdrantRetriever
 from mnemolet_core.storage import db_tracker
 
 
@@ -56,13 +57,50 @@ def ingest(directory: str, force: bool = False):
     print("Stored embeddings in Qdrant successfully.")
 
 
+def search(q: str, top_k: int = 5):
+    retriever = QdrantRetriever()
+    results = retriever.search(q, top_k=top_k)
+
+    if not results:
+        print("No results found.")
+        return
+
+    print("\nTop results:\n")
+    for i, r in enumerate(results, start=1):
+        print(f"{i}. (score={r['score']:.4f}) {r['text'][:200]}...\n")
+
+
 if __name__ == "__main__":
     import sys
 
     if len(sys.argv) < 2:
-        print("Usage: python -m cli.main <directory> [--force]")
+        print("Usage:")
+        print(" python -m cli.main ingest <directory> [--force]")
+        print(" python -m cli.main search <query> [--top-k N]")
         sys.exit(1)
 
-    data_dir = sys.argv[1]
-    force_flag = "--force" in sys.argv
-    ingest(data_dir, force=force_flag)
+    command = sys.argv[1]
+
+    if command == "ingest":
+        if len(sys.argv) < 3:
+            print("Usage: python -m cli.main ingest <directory> [--force]")
+            sys.exit(1)
+        data_dir = sys.argv[2]
+        force_flag = "--force" in sys.argv
+        ingest(data_dir, force=force_flag)
+
+    elif command == "search":
+        if len(sys.argv) < 3:
+            print("Usage: python -m cli.main search <query> [--top-k N]")
+            sys.exit(1)
+
+        q = sys.argv[2]
+        top_k = 5
+        if "--top-k" in sys.argv:
+            idx = sys.argv.index("--top-k")
+            if idx + 1 < len(sys.argv):
+                top_k = int(sys.argv[idx + 1])
+        search(q, top_k=top_k)
+
+    else:
+        print(f"Unknown command: {command}")
