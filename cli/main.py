@@ -5,6 +5,7 @@ from mnemolet_core.ingestion.preprocessor import chunk_text
 from mnemolet_core.embeddings.local_llm_embed import embed_texts
 from mnemolet_core.indexing.qdrant_indexer import QdrantIndexer
 from mnemolet_core.query.retriever import QdrantRetriever
+from mnemolet_core.query.generator import LocalGenerator
 from mnemolet_core.storage import db_tracker
 
 
@@ -70,6 +71,27 @@ def search(q: str, top_k: int = 5):
         print(f"{i}. (score={r['score']:.4f}) {r['text'][:200]}...\n")
 
 
+def answer(q: str, top_k: int = 3):
+    """
+    Search Qdrant and generate an answer using local LLM.
+    """
+    retriever = QdrantRetriever()
+    generator = LocalGenerator("llama3")
+
+    print(f"Searching for top {top_k} results..")
+    results = retriever.search(q, top_k=top_k)
+
+    if not results:
+        print("No results found.")
+        return
+
+    context_chunks = [r["text"] for r in results]
+    print("Generating answer..")
+    answer_text = generator.generate_answer(q, context_chunks)
+    print("\nAnswer:\n")
+    print(answer_text)
+
+
 if __name__ == "__main__":
     import sys
 
@@ -101,6 +123,13 @@ if __name__ == "__main__":
             if idx + 1 < len(sys.argv):
                 top_k = int(sys.argv[idx + 1])
         search(q, top_k=top_k)
+
+    elif command == "answer":
+        if len(sys.argv) < 3:
+            print("Usage: python -m cli.main answer <query>")
+            sys.exit(1)
+        query = " ".join(sys.argv[2:])
+        answer(query)
 
     else:
         print(f"Unknown command: {command}")
