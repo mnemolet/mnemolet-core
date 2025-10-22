@@ -53,7 +53,9 @@ def ingest(directory: str, force: bool = False):
 
     # store in Qdrant
     indexer = QdrantIndexer()
-    indexer.init_collection(vector_size=len(embeddings[0]))
+    if force:
+        print("Recreating Qdrant collection..")
+        indexer.init_collection(vector_size=len(embeddings[0]))
     indexer.store_embeddings(all_chunks, embeddings)
     print("Stored embeddings in Qdrant successfully.")
 
