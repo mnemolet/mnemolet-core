@@ -1,8 +1,10 @@
 from typing import List
 from sentence_transformers import SentenceTransformer
+import torch
 
-# small embedding model
-model = SentenceTransformer("all-MiniLM-L6-v2")
+# detect GPU automatically, small embedding model
+device = "cuda" if torch.cuda.is_available() else "cpu"
+model = SentenceTransformer("all-MiniLM-L6-v2", device=device)
 
 
 def embed_texts(texts: List[str]) -> List[List[float]]:
