@@ -1,12 +1,13 @@
 import json
 import requests
 
+
 class LocalGenerator:
     """
     Generate an answer using local LLM (via Ollama API).
     """
-    def __init__(self, model: str = "llama3", host: str =
-                 "http://localhost:11434"):
+
+    def __init__(self, model: str = "llama3", host: str = "http://localhost:11434"):
         self.model = model
         self.host = host
 
@@ -23,7 +24,7 @@ class LocalGenerator:
         try:
             response = requests.post(
                 f"{self.host}/api/generate",
-                json = {
+                json={
                     "model": self.model,
                     "prompt": prompt,
                     "stream": False,

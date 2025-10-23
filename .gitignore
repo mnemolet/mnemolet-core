@@ -211,3 +211,7 @@ qdrant_storage/
 
 # Examples
 examples/
+
+# embeddings
+embeddings.npy
+embeddings_metadata.json

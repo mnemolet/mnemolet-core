@@ -1,41 +1,52 @@
-from typing import List
+from typing import Iterable
 import numpy as np
 from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
 import torch
+import os
+import json
 
 # detect GPU automatically, small embedding model
 device = "cuda" if torch.cuda.is_available() else "cpu"
 model = SentenceTransformer("all-MiniLM-L6-v2", device=device)
 
 
-def embed_texts(texts: List[str], batch_size: int = 64) -> List[List[float]]:
+def embed_texts(
+    texts: Iterable[str],
+    output_file: str,
+    batch_size: int = 512,
+):
     """
-    Generate embeddings for a list of text chunks using small embedding model.
-    Current implementation is not efficient, it is done only for initial MVP.
-    It loads all texts into memory and it won't work with large dataset.
-    TODO: refactor using batch processing
+    Generate embeddings in batches and save directly to disk.
 
     Args:
-        texts: List of text chunks to embed
+        texts: Iterable of text chunks to embed
+        output_file: Path to save the embeddings (*.npy)
         batch_size: Number of items per batch
-
-    Returns:
-        List of embeddings
     """
-    if not texts:
-        return []
+    # remove existing embeddings
+    if os.path.exists(output_file):
+        os.remove(output_file)
 
-    embeddings = []
-    for i in tqdm(range(0, len(texts), batch_size), desc="Embedding batches"):
-        batch = texts[i:i + batch_size]
+    texts = list(texts)
+    embedding_dim = model.get_sentence_embedding_dimension()
+    num_texts = len(texts)
+    metadata = {"num_texts": num_texts, "embedding_dim": embedding_dim}
+    with open("embeddings_metadata.json", "w") as f:
+        json.dump(metadata, f)
+
+    # preallocate memmap array
+    embeddings_memmap = np.memmap(
+        output_file, dtype=np.float32, mode="w+", shape=(num_texts, embedding_dim)
+    )
+
+    for i in tqdm(range(0, num_texts, batch_size), desc="Embedding batches"):
+        batch = texts[i : i + batch_size]
         batch_embeddings = model.encode(
-            batch,
-            convert_to_numpy=True,
-            show_progress_bar=False,
-            device=device
+            batch, convert_to_numpy=True, show_progress_bar=False, device=device
         )
-        embeddings.append(batch_embeddings)
-    all_embeddings = np.vstack(embeddings)
+        batch_embeddings = np.stack(batch_embeddings).astype(np.float32)
+        print(batch_embeddings.shape)
+        embeddings_memmap[i : i + len(batch), :] = batch_embeddings
 
-    return all_embeddings.tolist()
+    embeddings_memmap.flush()
