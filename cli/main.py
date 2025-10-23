@@ -7,6 +7,8 @@ from mnemolet_core.indexing.qdrant_indexer import QdrantIndexer
 from mnemolet_core.query.retriever import QdrantRetriever
 from mnemolet_core.query.generator import LocalGenerator
 from mnemolet_core.storage import db_tracker
+import numpy as np
+import json
 
 
 def ingest(directory: str, force: bool = False):
@@ -46,8 +48,18 @@ def ingest(directory: str, force: bool = False):
 
     print(f"Total chunks: {total_chunks}")
 
-    # generate embeddings for all chunks
-    embeddings = embed_texts(all_chunks)
+    # generate embeddings for all chunks and save to file
+    embed_texts(all_chunks, output_file="embeddings.npy")
+    # memory-map embeddings
+    with open("embeddings_metadata.json", "r") as f:
+        metadata = json.load(f)
+    embeddings = np.memmap(
+        "embeddings.npy",
+        dtype=np.float32,
+        mode="r",
+        shape=(metadata["num_texts"], metadata["embedding_dim"]),
+    )
+
     print(f"Generated embeddings for {len(embeddings)} chunks.")
     print(f"Example embedding (first chunk, first 8 values): {embeddings[0][:8]}")
 
@@ -56,7 +68,12 @@ def ingest(directory: str, force: bool = False):
     if force:
         print("Recreating Qdrant collection..")
         indexer.init_collection(vector_size=len(embeddings[0]))
-    indexer.store_embeddings(all_chunks, embeddings)
+
+    batch_size = 1000
+    for i in range(0, len(embeddings), batch_size):
+        chunk_batch = all_chunks[i : i + batch_size]
+        emb_batch = embeddings[i : i + batch_size]
+        indexer.store_embeddings(chunk_batch, emb_batch)
     print("Stored embeddings in Qdrant successfully.")
 
 
