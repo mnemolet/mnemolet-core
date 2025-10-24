@@ -8,7 +8,6 @@ from mnemolet_core.query.retriever import QdrantRetriever
 from mnemolet_core.query.generator import LocalGenerator
 from mnemolet_core.storage import db_tracker
 import numpy as np
-import json
 
 
 def ingest(directory: str, force: bool = False):
@@ -49,15 +48,22 @@ def ingest(directory: str, force: bool = False):
     print(f"Total chunks: {total_chunks}")
 
     # generate embeddings for all chunks and save to file
-    embed_texts(all_chunks, output_file="embeddings.npy")
+    embedding_file = "embeddings.npy"
+    num_texts, embedding_dim = embed_texts(all_chunks, output_file=embedding_file)
+
+    db_tracker.save_embeddings_metadata(
+        embedding_file=embedding_file,
+        num_chunks=num_texts,
+        embedding_dim=embedding_dim,
+        model_name="all-MiniLM-L6-v2",
+    )
+
     # memory-map embeddings
-    with open("embeddings_metadata.json", "r") as f:
-        metadata = json.load(f)
     embeddings = np.memmap(
-        "embeddings.npy",
+        embedding_file,
         dtype=np.float32,
         mode="r",
-        shape=(metadata["num_texts"], metadata["embedding_dim"]),
+        shape=(num_texts, embedding_dim),
     )
 
     print(f"Generated embeddings for {len(embeddings)} chunks.")

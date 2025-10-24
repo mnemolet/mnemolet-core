@@ -1,6 +1,7 @@
 import sqlite3
 from pathlib import Path
 from datetime import datetime, UTC
+from typing import Optional, Tuple
 
 
 DB_PATH = Path.home() / ".mnemolet" / "tracker.db"
@@ -19,7 +20,17 @@ def init_db():
                 hash TEXT,
                 ingested_at TEXT,
                 indexed INTEGER DEFAULT 0
-            )
+            );
+        """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS embeddings_metadata (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                embedding_file TEXT NOT NULL,
+                num_chunks INTEGER NOT NULL,
+                embedding_dim INTEGER NOT NULL,
+                model_name TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
         """)
         conn.commit()
 
@@ -74,3 +85,33 @@ def list_files(indexed: bool | None = None) -> list[dict]:
         conn.row_factory = sqlite3.Row
         rows = conn.execute(query, params).fetchall()
         return [dict(row) for row in rows]
+
+
+def save_embeddings_metadata(
+    embedding_file: str, num_chunks: int, embedding_dim: int, model_name: str
+):
+    init_db()
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.execute(
+            """
+            INSERT INTO embeddings_metadata (embedding_file, num_chunks,
+            embedding_dim, model_name)
+            VALUES (?, ?, ?, ?)
+            """,
+            (embedding_file, num_chunks, embedding_dim, model_name),
+        )
+        conn.commit()
+
+
+def load_embeddings_metadata() -> Optional[Tuple[str, int, int, str]]:
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.execute(
+            """
+        SELECT embedding_file, num_chunks, embedding_dim, model_name 
+        FROM embeddings_metadata 
+        ORDER BY created_at DESC
+        LIMIT 1
+        """
+        )
+        row = cursor.fetchone()
+        return row
