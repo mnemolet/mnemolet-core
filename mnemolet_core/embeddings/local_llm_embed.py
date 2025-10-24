@@ -1,10 +1,9 @@
-from typing import Iterable
+from typing import Iterable, Tuple
 import numpy as np
 from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
 import torch
 import os
-import json
 
 # detect GPU automatically, small embedding model
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -15,7 +14,7 @@ def embed_texts(
     texts: Iterable[str],
     output_file: str,
     batch_size: int = 512,
-):
+) -> Tuple[int, int]:
     """
     Generate embeddings in batches and save directly to disk.
 
@@ -23,6 +22,10 @@ def embed_texts(
         texts: Iterable of text chunks to embed
         output_file: Path to save the embeddings (*.npy)
         batch_size: Number of items per batch
+
+    Returns:
+        a tuple (num_texts, embedding_dim) with the total number of chunks and
+        the embedding vector dimension.
     """
     # remove existing embeddings
     if os.path.exists(output_file):
@@ -31,9 +34,6 @@ def embed_texts(
     texts = list(texts)
     embedding_dim = model.get_sentence_embedding_dimension()
     num_texts = len(texts)
-    metadata = {"num_texts": num_texts, "embedding_dim": embedding_dim}
-    with open("embeddings_metadata.json", "w") as f:
-        json.dump(metadata, f)
 
     # preallocate memmap array
     embeddings_memmap = np.memmap(
@@ -50,3 +50,4 @@ def embed_texts(
         embeddings_memmap[i : i + len(batch), :] = batch_embeddings
 
     embeddings_memmap.flush()
+    return num_texts, embedding_dim
