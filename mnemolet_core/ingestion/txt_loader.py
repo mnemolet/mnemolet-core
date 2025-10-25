@@ -1,34 +1,11 @@
 from pathlib import Path
-from .utils import hash_file
+from .base_loader import load_files
 
 
-def load_txt_files(dir: str) -> list[dict]:
-    """
-    Recursively load .txt files from a given directory
+def extract_txt(file: Path) -> str:
+    with open(file, "r", encoding="utf-8") as f:
+        return f.read()
 
-    Returns:
-        List[str]: containing:
-        {
-            "path": str,
-            "content": str,
-        }
-    """
-    texts = []
-    for p in Path(dir).rglob("*.txt"):
-        try:
-            with open(p, "r", encoding="utf-8") as f:
-                content = f.read().strip()
-            # skip empty files
-            if not content:
-                continue
-            file_hash = hash_file(p)
-            texts.append(
-                {
-                    "path": str(p.resolve()),
-                    "content": content,
-                    "hash": file_hash,
-                }
-            )
-        except Exception as e:
-            print(f"Skipping {p}: {e}")
-    return texts
+
+def load_txt_files(dir: Path):
+    return load_files(dir, "*.txt", extract_txt)
