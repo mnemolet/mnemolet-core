@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from mnemolet_core.ingestion.load_all_files import load_all_files
+from mnemolet_core.ingestion.loader import load_all_files
 from mnemolet_core.ingestion.preprocessor import chunk_text
 from mnemolet_core.embeddings.local_llm_embed import embed_texts
 from mnemolet_core.indexing.qdrant_indexer import QdrantIndexer
