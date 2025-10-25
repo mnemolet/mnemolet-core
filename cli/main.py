@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from mnemolet_core.ingestion.txt_loader import load_txt_files
+from mnemolet_core.ingestion.load_all_files import load_all_files
 from mnemolet_core.ingestion.preprocessor import chunk_text
 from mnemolet_core.embeddings.local_llm_embed import embed_texts
 from mnemolet_core.indexing.qdrant_indexer import QdrantIndexer
@@ -19,7 +19,7 @@ def ingest(directory: str, force: bool = False):
 
     db_tracker.init_db()
 
-    texts_data = load_txt_files(directory)
+    texts_data = load_all_files(directory)
     new_texts = []
 
     for data in texts_data:
