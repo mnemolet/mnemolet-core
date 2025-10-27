@@ -1,6 +1,5 @@
 from pathlib import Path
 from pypdf import PdfReader
-from .base_loader import load_files
 
 
 def extract_pdf(file: Path) -> str:
@@ -11,7 +10,3 @@ def extract_pdf(file: Path) -> str:
         if page_text:
             text += page_text + "\n"
     return text
-
-
-def load_pdf_files(dir: Path):
-    return load_files(dir, "*.pdf", extract_pdf)

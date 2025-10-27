@@ -1,86 +1,100 @@
+import click
+import time
 from pathlib import Path
+import numpy as np
 
-from mnemolet_core.ingestion.loader import load_all_files
-from mnemolet_core.ingestion.preprocessor import chunk_text
-from mnemolet_core.embeddings.local_llm_embed import embed_texts
+# from mnemolet_core.ingestion.loader import load_all_files
+from mnemolet_core.ingestion.preprocessor import process_directory
+from mnemolet_core.embeddings.local_llm_embed import embed_texts_batch
 from mnemolet_core.indexing.qdrant_indexer import QdrantIndexer
 from mnemolet_core.query.retriever import QdrantRetriever
 from mnemolet_core.query.generator import LocalGenerator
 from mnemolet_core.storage import db_tracker
-import numpy as np
 
 
-def ingest(directory: str, force: bool = False):
-    """Ingest .txt files from a directory into Qdrant."""
+def ingest(directory: str, force: bool = False, batch_size: int = 100):
+    """
+    Ingest files from a directory into Qdrant.
+    - streams files and chunks
+    """
+    start_total = time.time()
     directory = Path(directory)
     if not directory.exists():
         print(f"Error: directory {directory} not found")
         return
 
+    print(f"Starting ingestion from {directory}")
     db_tracker.init_db()
-
-    texts_data = load_all_files(directory)
-    new_texts = []
-
-    for data in texts_data:
-        if force or not db_tracker.file_exists(data["hash"]):
-            db_tracker.add_file(data["path"], data["hash"])
-            new_texts.append(data)
-
-    if not new_texts:
-        print("No new files to ingest.")
-        return
-
-    print(f"Processing {len(new_texts)} new files...")
-
-    total_chunks = 0
-    all_chunks = []
-    for data in new_texts:
-        chunks = chunk_text(data["content"])
-        total_chunks += len(chunks)
-        all_chunks.extend(chunks)
-
-        # DEBUG: print info about chunks
-        print(f"{data['path']}: {len(chunks)} chunks")
-        for i, c in enumerate(chunks[:2], 1):  # show first 2
-            print(f"  Chunk {i}: {c[:80]}...")
-
-    print(f"Total chunks: {total_chunks}")
-
-    # generate embeddings for all chunks and save to file
-    embedding_file = "embeddings.npy"
-    num_texts, embedding_dim = embed_texts(all_chunks, output_file=embedding_file)
-
-    db_tracker.save_embeddings_metadata(
-        embedding_file=embedding_file,
-        num_chunks=num_texts,
-        embedding_dim=embedding_dim,
-        model_name="all-MiniLM-L6-v2",
-    )
-
-    # memory-map embeddings
-    embeddings = np.memmap(
-        embedding_file,
-        dtype=np.float32,
-        mode="r",
-        shape=(num_texts, embedding_dim),
-    )
-
-    print(f"Generated embeddings for {len(embeddings)} chunks.")
-    print(f"Example embedding (first chunk, first 8 values): {embeddings[0][:8]}")
-
-    # store in Qdrant
     indexer = QdrantIndexer()
-    if force:
-        print("Recreating Qdrant collection..")
-        indexer.init_collection(vector_size=len(embeddings[0]))
+    embedding_dim = None
+    first_batch = True
+    total_chunks = 0
+    total_files = 0
 
-    batch_size = 1000
-    for i in range(0, len(embeddings), batch_size):
-        chunk_batch = all_chunks[i : i + batch_size]
-        emb_batch = embeddings[i : i + batch_size]
-        indexer.store_embeddings(chunk_batch, emb_batch)
-    print("Stored embeddings in Qdrant successfully.")
+    chunk_batch = []
+    metadata_batch = []
+
+    for data in process_directory(directory):
+        file_path = data["path"]
+        file_hash = data["hash"]
+        chunk = data["chunk"]
+        # skip files already processed
+        if not force and db_tracker.file_exists(file_hash):
+            print(f"Skipping already ingested: {file_path}")
+            continue
+
+        is_new_file = (
+            not metadata_batch # first chunk overall
+            or file_path != metadata_batch[-1]["path"] # file changed
+        )
+
+        if is_new_file:
+            print(f"Processing file #{total_files}: {file_path}")
+            total_files += 1
+
+        db_tracker.add_file(data["path"], data["hash"])
+
+        # add to current batch
+        chunk_batch.append(chunk)
+        metadata_batch.append({"path": file_path, "hash": file_hash})
+        total_chunks += 1
+
+        # if batch full —> embed & store
+        if len(chunk_batch) >= batch_size:
+            print(f"Embedding batch of {len(chunk_batch)} chunks..")
+            for embeddings in embed_texts_batch(chunk_batch, batch_size=batch_size):
+                if first_batch:
+                    embedding_dim = embeddings.shape[1]
+                    if force:
+                        print(f"Recreating Qdrant collection (dim={embedding_dim})..")
+                        indexer.init_collection(vector_size=embedding_dim)
+                    first_batch = False
+
+                indexer.store_embeddings(chunk_batch, embeddings)
+                print(f"Stored {len(chunk_batch)} chunks in Qdrant.")
+                chunk_batch.clear()
+                metadata_batch.clear()
+
+    # handle the rest
+    if chunk_batch:
+        print(f"Final batch: embedding {len(chunk_batch)} chunks..")
+        for embeddings in embed_texts_batch(chunk_batch, batch_size=batch_size):
+            if first_batch:
+                embedding_dim = embeddings.shape[1]
+                if force:
+                    print("Recreating Qdrant collection (dim={embedding_dim})..")
+                    indexer.init_collection(vector_size=embedding_dim)
+                first_batch = False
+
+            indexer.store_embeddings(chunk_batch, embeddings)
+            print(f"Stored {len(chunk_batch)} chunks in Qdrant.")
+            chunk_batch.clear()
+            metadata_batch.clear()
+
+    total_time = time.time() - start_total
+
+    print(f"Ingestion complete: {total_files} files, {total_chunks} stored in "
+          f"Qdrant in {total_time:.1f}s.\n")
 
 
 def search(q: str, top_k: int = 5):
@@ -101,10 +115,13 @@ def answer(q: str, top_k: int = 3):
     Search Qdrant and generate an answer using local LLM.
     """
     retriever = QdrantRetriever()
+
     generator = LocalGenerator("llama3")
 
     print(f"Searching for top {top_k} results..")
     results = retriever.search(q, top_k=top_k)
+    # for DEBUG only
+    print("Raw result sample:\n", results[0])
 
     if not results:
         print("No results found.")
