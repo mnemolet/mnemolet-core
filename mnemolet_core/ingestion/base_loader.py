@@ -1,38 +1,25 @@
 from pathlib import Path
 from .utils import hash_file
+from collections.abc import Iterator
+from .loader_registry import get_extractor
 
-
-def load_files(dir: Path, pattern: str, extract_content: [[Path], str]) -> list[dict]:
+def stream_files(dir: Path) -> Iterator[dict[str, str, str]]:
     """
-    Recursively load files from a given directory using extract_content.
-
-    Args:
-        dir: path to directory
-        pattern: glob pattern, eg: *.txt, *.pdf, etc
-        extract_content: fn that takes path and returns text content
-
-    Returns:
-        list[dict]: containing:
-        {
-            "path": str,
-            "content": str,
-            "hash": str,
-        }
+    Yield for supported file types.
     """
-    files_data = []
-    for p in dir.rglob(pattern):
+    for file in dir.rglob("*"):
+        file_hash = hash_file(file)
+        extractor = get_extractor(file)
+        if not extractor:
+            continue
         try:
-            content = extract_content(p).strip()
-            if not content:
-                continue
-            file_hash = hash_file(p)
-            data = {
-                "path": str(p.resolve()),
-                "content": content,
-                "hash": file_hash,
-            }
-            files_data.append(data)
-            print(f"Loaded {pattern}: {p.name}")
+            for content_part in extractor(file):
+                data = {
+                    "path": str(file.resolve()),
+                    "content": content_part,
+                    "hash": file_hash,
+                }
+            yield data
         except Exception as e:
-            print(f"Error reading {p}: {e}")
-    return files_data
+            print(f"Skipping {file}: {e}")
+
