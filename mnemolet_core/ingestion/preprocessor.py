@@ -1,5 +1,6 @@
 from .base_loader import stream_files
 
+
 def chunk_text(text: str, max_length: int = 500) -> list[str]:
     """
     Split large text into smaller chunks (by words).
@@ -14,6 +15,7 @@ def chunk_text(text: str, max_length: int = 500) -> list[str]:
         chunk = " ".join(words[i : i + max_length])
         chunks.append(chunk)
     return chunks
+
 
 def process_directory(dir):
     """

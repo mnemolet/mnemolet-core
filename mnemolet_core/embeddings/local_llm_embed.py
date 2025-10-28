@@ -52,6 +52,7 @@ def embed_texts(
     embeddings_memmap.flush()
     return num_texts, embedding_dim
 
+
 def embed_texts_batch(
     texts: Iterable[str],
     batch_size: int = 512,
@@ -76,10 +77,7 @@ def embed_texts_batch(
         batch.append(text)
         if len(batch) >= batch_size:
             embeddings = model.encode(
-                batch,
-                convert_to_numpy=True,
-                show_progress_bar=False,
-                device=device
+                batch, convert_to_numpy=True, show_progress_bar=False, device=device
             ).astype(np.float32)
             yield embeddings
             batch = []
@@ -87,9 +85,6 @@ def embed_texts_batch(
     # flush
     if batch:
         embeddings = model.encode(
-            batch,
-            convert_to_numpy=True,
-            show_progress_bar=False,
-            device=device
+            batch, convert_to_numpy=True, show_progress_bar=False, device=device
         ).astype(np.float32)
         yield embeddings

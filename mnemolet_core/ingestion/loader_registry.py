@@ -1,4 +1,5 @@
 from pathlib import Path
+
 # from collections.abc import Optional, Callable
 from .loaders.txt_loader import extract_txt
 from .loaders.pdf_loader import extract_pdf
@@ -6,6 +7,7 @@ from .loaders.pdf_loader import extract_pdf
 EXTRACTORS: dict[str, [[Path], str]] = {
     ".txt": extract_txt,
 }
+
 
 def get_extractor(file: Path) -> [[[Path], str]]:
     """

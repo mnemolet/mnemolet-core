@@ -44,8 +44,8 @@ def ingest(directory: str, force: bool = False, batch_size: int = 100):
             continue
 
         is_new_file = (
-            not metadata_batch # first chunk overall
-            or file_path != metadata_batch[-1]["path"] # file changed
+            not metadata_batch  # first chunk overall
+            or file_path != metadata_batch[-1]["path"]  # file changed
         )
 
         if is_new_file:
@@ -93,8 +93,10 @@ def ingest(directory: str, force: bool = False, batch_size: int = 100):
 
     total_time = time.time() - start_total
 
-    print(f"Ingestion complete: {total_files} files, {total_chunks} stored in "
-          f"Qdrant in {total_time:.1f}s.\n")
+    print(
+        f"Ingestion complete: {total_files} files, {total_chunks} stored in "
+        f"Qdrant in {total_time:.1f}s.\n"
+    )
 
 
 def search(q: str, top_k: int = 5):
