@@ -1,9 +1,7 @@
 import click
 import time
 from pathlib import Path
-import numpy as np
 
-# from mnemolet_core.ingestion.loader import load_all_files
 from mnemolet_core.ingestion.preprocessor import process_directory
 from mnemolet_core.embeddings.local_llm_embed import embed_texts_batch
 from mnemolet_core.indexing.qdrant_indexer import QdrantIndexer
@@ -70,7 +68,7 @@ def ingest(directory: str, force: bool = False, batch_size: int = 100):
                         indexer.init_collection(vector_size=embedding_dim)
                     first_batch = False
 
-                indexer.store_embeddings(chunk_batch, embeddings)
+                indexer.store_embeddings(chunk_batch, embeddings, metadata_batch)
                 print(f"Stored {len(chunk_batch)} chunks in Qdrant.")
                 chunk_batch.clear()
                 metadata_batch.clear()
@@ -86,7 +84,7 @@ def ingest(directory: str, force: bool = False, batch_size: int = 100):
                     indexer.init_collection(vector_size=embedding_dim)
                 first_batch = False
 
-            indexer.store_embeddings(chunk_batch, embeddings)
+            indexer.store_embeddings(chunk_batch, embeddings, metadata_batch)
             print(f"Stored {len(chunk_batch)} chunks in Qdrant.")
             chunk_batch.clear()
             metadata_batch.clear()

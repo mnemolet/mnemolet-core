@@ -1,4 +1,4 @@
-from typing import List
+import numpy as np
 from qdrant_client import QdrantClient
 from qdrant_client.models import PointStruct, Distance, VectorParams
 
@@ -22,16 +22,24 @@ class QdrantIndexer:
             vectors_config=VectorParams(size=vector_size, distance=Distance.COSINE),
         )
 
-    def store_embeddings(self, texts: List[str], embeddings: List[List[float]]):
+    def store_embeddings(
+        self, chunks: list[str], embeddings: np.ndarray, metadata: list[dict[str, str]]
+    ):
         """
         Store text embeddings in Qdrant.
         """
+        payloads = [
+            {"path": m["path"], "hash": m["hash"], "text": chunk}
+            for m, chunk in zip(metadata, chunks)
+        ]
+
+        # build Qdrand points
         points = [
             PointStruct(
                 id=i,
                 vector=embeddings[i],
-                payload={"text": texts[i]},
+                payload=payloads[i],
             )
-            for i in range(len(texts))
+            for i in range(len(chunks))
         ]
         self.client.upsert(collection_name=self.collection_name, points=points)
