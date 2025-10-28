@@ -3,6 +3,7 @@ from .utils import hash_file
 from collections.abc import Iterator
 from .loader_registry import get_extractor
 
+
 def stream_files(dir: Path) -> Iterator[dict[str, str, str]]:
     """
     Yield for supported file types.
@@ -22,4 +23,3 @@ def stream_files(dir: Path) -> Iterator[dict[str, str, str]]:
             yield data
         except Exception as e:
             print(f"Skipping {file}: {e}")
-
