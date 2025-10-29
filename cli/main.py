@@ -107,7 +107,7 @@ def search(q: str, top_k: int = 5):
 
     print("\nTop results:\n")
     for i, r in enumerate(results, start=1):
-        print(f"{i}. (score={r['score']:.4f}) {r['text'][:200]}...\n")
+        print(f"{i}. (score={r['score']:.4f}) (path={r['path']}) {r['text'][:200]}...\n")
 
 
 def answer(q: str, top_k: int = 3):
@@ -132,6 +132,9 @@ def answer(q: str, top_k: int = 3):
     answer_text = generator.generate_answer(q, context_chunks)
     print("\nAnswer:\n")
     print(answer_text)
+    print("\nSources:\n")
+    for i, r in enumerate(results, start=1):
+        print(f"{i}. {r['path']} (score={r['score']:.4f})")
 
 
 if __name__ == "__main__":
