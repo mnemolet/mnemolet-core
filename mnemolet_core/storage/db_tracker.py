@@ -17,18 +17,6 @@ CREATE TABLE IF NOT EXISTS files (
 );
 """
 
-CREATE_TABLE_EMBEDDINGS_METADATA = """
-CREATE TABLE IF NOT EXISTS embeddings_metadata (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    embedding_file TEXT NOT NULL,
-    num_chunks INTEGER NOT NULL,
-    embedding_dim INTEGER NOT NULL,
-    model_name TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-"""
-
-
 def get_connection() -> sqlite3.Connection:
     """
     Returns a SQLite connection.
@@ -47,7 +35,7 @@ def init_db():
     """
     with get_connection() as conn:
         conn.execute(CREATE_TABLE_FILES)
-        conn.execute(CREATE_TABLE_EMBEDDINGS_METADATA)
+        # conn.execute(CREATE_TABLE_EMBEDDINGS_METADATA)
 
 
 def add_file(path: str, file_hash: str):
@@ -93,37 +81,3 @@ def list_files(indexed: Optional[bool] = None) -> List[dict]:
     with get_connection() as conn:
         rows = conn.execute(query, params).fetchall()
         return [dict(row) for row in rows]
-
-
-def save_embeddings_metadata(
-    embedding_file: str, num_chunks: int, embedding_dim: int, model_name: str
-):
-    """
-    Insert new embedding metadata.
-    """
-    with get_connection() as conn:
-        conn.execute(
-            """
-            INSERT INTO embeddings_metadata (embedding_file, num_chunks,
-            embedding_dim, model_name)
-            VALUES (?, ?, ?, ?)
-            """,
-            (embedding_file, num_chunks, embedding_dim, model_name),
-        )
-
-
-def load_embeddings_metadata() -> Optional[Tuple[str, int, int, str]]:
-    """
-    Load the latest embedding metadata.
-    """
-    with get_connection() as conn:
-        cursor = conn.execute(
-            """
-        SELECT embedding_file, num_chunks, embedding_dim, model_name
-        FROM embeddings_metadata
-        ORDER BY created_at DESC
-        LIMIT 1
-        """
-        )
-        row = cursor.fetchone()
-        return row
