@@ -14,7 +14,7 @@ class QdrantRetriever:
             collection_name="documents",
             query=query_vector,
             limit=top_k,
-            with_payload=True
+            with_payload=True,
         )
 
         return [

@@ -1,7 +1,7 @@
 import sqlite3
 from pathlib import Path
 from datetime import datetime, UTC
-from typing import Optional, Tuple, List
+from typing import Optional
 
 
 DB_PATH = Path.home() / ".mnemolet" / "tracker.db"
@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS files (
     indexed INTEGER DEFAULT 0
 );
 """
+
 
 def get_connection() -> sqlite3.Connection:
     """
@@ -69,7 +70,7 @@ def mark_indexed(file_hash: str):
         conn.execute("UPDATE files SET indexed = 1 WHERE hash = ?", (file_hash,))
 
 
-def list_files(indexed: Optional[bool] = None) -> List[dict]:
+def list_files(indexed: Optional[bool] = None) -> list[dict]:
     """
     List all tracked files, can be optionally filtered by indexed status.
     """

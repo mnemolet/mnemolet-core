@@ -1,9 +1,8 @@
-from typing import Iterable, Tuple, Iterator
+from typing import Iterable, Iterator
 import numpy as np
 from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
 import torch
-import os
 
 # detect GPU automatically, small embedding model
 device = "cuda" if torch.cuda.is_available() else "cpu"

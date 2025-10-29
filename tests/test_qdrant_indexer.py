@@ -25,8 +25,12 @@ def test_store_embeddings(mock_client_class):
     indexer = QdrantIndexer()
     texts = ["one", "two"]
     embeddings = [[0.1, 0.2], [0.3, 0.4]]
+    metadata = [
+        {"path": "p1", "hash": "h1"},
+        {"path": "p2", "hash": "h2"},
+    ]
 
-    indexer.store_embeddings(texts, embeddings)
+    indexer.store_embeddings(texts, embeddings, metadata)
 
     mock_client.upsert.assert_called_once()
     args, kwargs = mock_client.upsert.call_args
