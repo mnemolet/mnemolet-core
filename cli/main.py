@@ -107,7 +107,9 @@ def search(q: str, top_k: int = 5):
 
     print("\nTop results:\n")
     for i, r in enumerate(results, start=1):
-        print(f"{i}. (score={r['score']:.4f}) (path={r['path']}) {r['text'][:200]}...\n")
+        print(
+            f"{i}. (score={r['score']:.4f}) (path={r['path']}) {r['text'][:200]}...\n"
+        )
 
 
 def answer(q: str, top_k: int = 3):
