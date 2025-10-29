@@ -9,13 +9,20 @@ class QdrantRetriever:
 
     def search(self, query: str, top_k: int = 5):
         query_vector = self.model.encode(query).tolist()
-        results = self.client.search(
-            collection_name="documents", query_vector=query_vector, limit=top_k
+
+        results = self.client.query_points(
+            collection_name="documents",
+            query=query_vector,
+            limit=top_k,
+            with_payload=True
         )
+
         return [
             {
-                "text": i.payload["text"],
+                "text": i.payload.get("text", ""),
                 "score": i.score,
+                "path": i.payload.get("path", ""),
+                "hash": i.payload.get("hash", ""),
             }
-            for i in results
+            for i in results.points
         ]
