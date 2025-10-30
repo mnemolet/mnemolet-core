@@ -6,6 +6,7 @@ from .loaders.pdf_loader import extract_pdf
 
 EXTRACTORS: dict[str, [[Path], str]] = {
     ".txt": extract_txt,
+    ".pdf": extract_pdf,
 }
 
 
