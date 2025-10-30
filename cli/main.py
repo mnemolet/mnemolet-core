@@ -134,13 +134,35 @@ def answer(q: str, top_k: int = 3):
     answer_text = generator.generate_answer(q, context_chunks)
     print("\nAnswer:\n")
     print(answer_text)
+
     print("\nSources:\n")
+    results = only_unique(results)
     for i, r in enumerate(results, start=1):
         print(f"{i}. {r['path']} (score={r['score']:.4f})")
 
 
+def only_unique(xz: list) -> list:
+    """
+    Helper fn to leave only unique results from a given list.
+    """
+    unique = []
+    seen = set()
+
+    for x in xz:
+        path = x["path"]
+        if path not in seen:
+            seen.add(path)
+            unique.append(x)
+    return unique
+
+
 if __name__ == "__main__":
     import sys
+    # import gc
+    # import warnings
+
+    # warnings.filterwarnings("always", category=ResourceWarning)
+    # gc.collect()
 
     if len(sys.argv) < 2:
         print("Usage:")

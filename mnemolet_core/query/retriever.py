@@ -1,3 +1,4 @@
+from typing import Any
 from qdrant_client import QdrantClient
 from sentence_transformers import SentenceTransformer
 
@@ -7,7 +8,7 @@ class QdrantRetriever:
         self.model = SentenceTransformer(model_name)
         self.client = QdrantClient(url)
 
-    def search(self, query: str, top_k: int = 5):
+    def search(self, query: str, top_k: int = 5) -> list[dict[str, Any]]:
         query_vector = self.model.encode(query).tolist()
 
         results = self.client.query_points(
