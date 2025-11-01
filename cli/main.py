@@ -10,45 +10,64 @@ from mnemolet_core.query.generator import LocalGenerator
 from mnemolet_core.storage import db_tracker
 
 
-def ingest(directory: str, force: bool = False, batch_size: int = 100):
+@click.group()
+def cli():
+    """
+    CLI for mnemolet.
+    """
+    pass
+
+
+@cli.command()
+@click.argument("directory", type=click.Path(exists=True, file_okay=False))
+@click.option(
+    "--force", is_flag=True, help="Recreate Qdrant collection and reindex all files."
+)
+@click.option(
+    "--batch-size", default=100, show_default=True, help="Number of chunks per batch."
+)
+def ingest(directory: str, force: bool, batch_size: int):
     """
     Ingest files from a directory into Qdrant.
-    - streams files and chunks
+    - streams files, chunks them, embeds text and stores data in Qdrant.
     """
     start_total = time.time()
     directory = Path(directory)
-    if not directory.exists():
-        print(f"Error: directory {directory} not found")
-        return
 
-    print(f"Starting ingestion from {directory}")
+    click.echo(f"Starting ingestion from {directory}")
     db_tracker.init_db()
     indexer = QdrantIndexer()
     embedding_dim = None
-    first_batch = True
+    # first_batch = True
     total_chunks = 0
     total_files = 0
 
     chunk_batch = []
     metadata_batch = []
 
+    seen_files = set()
+
+    if force:
+        first_chunk = next(process_directory(directory))
+        first_embedding = next(embed_texts_batch([first_chunk["chunk"]], batch_size=1))
+        embedding_dim = first_embedding.shape[1]
+        click.echo(f"Recreating Qdrant collection (dim={embedding_dim})..")
+        indexer.init_collection(vector_size=embedding_dim)
+
     for data in process_directory(directory):
         file_path = data["path"]
         file_hash = data["hash"]
         chunk = data["chunk"]
+
         # skip files already processed
         if not force and db_tracker.file_exists(file_hash):
-            print(f"Skipping already ingested: {file_path}")
+            click.echo(f"Skipping already ingested: {file_path}")
             continue
 
-        is_new_file = (
-            not metadata_batch  # first chunk overall
-            or file_path != metadata_batch[-1]["path"]  # file changed
-        )
-
-        if is_new_file:
-            print(f"Processing file #{total_files}: {file_path}")
+        if file_path not in seen_files:
+            click.echo(f"Processing file #{total_files}: {file_path}")
             total_files += 1
+            seen_files.add(file_path)
 
         db_tracker.add_file(data["path"], data["hash"])
 
@@ -59,91 +78,100 @@ def ingest(directory: str, force: bool = False, batch_size: int = 100):
 
         # if batch full —> embed & store
         if len(chunk_batch) >= batch_size:
-            print(f"Embedding batch of {len(chunk_batch)} chunks..")
-            for embeddings in embed_texts_batch(chunk_batch, batch_size=batch_size):
-                if first_batch:
-                    embedding_dim = embeddings.shape[1]
-                    if force:
-                        print(f"Recreating Qdrant collection (dim={embedding_dim})..")
-                        indexer.init_collection(vector_size=embedding_dim)
-                    first_batch = False
-
-                indexer.store_embeddings(chunk_batch, embeddings, metadata_batch)
-                print(f"Stored {len(chunk_batch)} chunks in Qdrant.")
-                chunk_batch.clear()
-                metadata_batch.clear()
-
-    # handle the rest
-    if chunk_batch:
-        print(f"Final batch: embedding {len(chunk_batch)} chunks..")
-        for embeddings in embed_texts_batch(chunk_batch, batch_size=batch_size):
-            if first_batch:
-                embedding_dim = embeddings.shape[1]
-                if force:
-                    print("Recreating Qdrant collection (dim={embedding_dim})..")
-                    indexer.init_collection(vector_size=embedding_dim)
-                first_batch = False
-
-            indexer.store_embeddings(chunk_batch, embeddings, metadata_batch)
-            print(f"Stored {len(chunk_batch)} chunks in Qdrant.")
+            _store_batch(indexer, chunk_batch, metadata_batch, embedding_dim, force)
+            # first_batch = False
             chunk_batch.clear()
             metadata_batch.clear()
 
+    # handle the rest
+    if chunk_batch:
+        _store_batch(indexer, chunk_batch, metadata_batch, embedding_dim, force)
+
     total_time = time.time() - start_total
 
-    print(
+    click.echo(
         f"Ingestion complete: {total_files} files, {total_chunks} stored in "
         f"Qdrant in {total_time:.1f}s.\n"
     )
 
 
-def search(q: str, top_k: int = 5):
+def _store_batch(indexer, chunk_batch, metadata_batch, embedding_dim, force):
+    click.echo(f"Embedding batch of {len(chunk_batch)} chunks..")
+    for embeddings in embed_texts_batch(chunk_batch, batch_size=len(chunk_batch)):
+        indexer.store_embeddings(chunk_batch, embeddings, metadata_batch)
+        click.echo(f"Stored {len(chunk_batch)} chunks in Qdrant.")
+
+
+@cli.command()
+@click.argument("query", type=str)
+@click.option(
+    "--top-k", default=5, show_default=True, help="Number of results to retrieve."
+)
+def search(query: str, top_k: int):
+    """
+    Search Qdrant for relevant documents.
+    """
     retriever = QdrantRetriever()
-    results = retriever.search(q, top_k=top_k)
+    results = retriever.search(query, top_k=top_k)
 
     if not results:
-        print("No results found.")
+        click.echo("No results found.")
         return
 
-    print("\nTop results:\n")
+    click.echo("\nTop results:\n")
     for i, r in enumerate(results, start=1):
-        print(
+        click.echo(
             f"{i}. (score={r['score']:.4f}) (path={r['path']}) {r['text'][:200]}...\n"
         )
 
 
-def answer(q: str, top_k: int = 3):
+@cli.command()
+@click.argument("query", type=str)
+@click.option(
+    "--top-k",
+    default=3,
+    show_default=True,
+    help="Number of context chunks for generation.",
+)
+@click.option(
+    "--model",
+    default="llama3",
+    show_default=True,
+    help="Local model to use for generation.",
+)
+def answer(query: str, top_k: int, model: str):
     """
     Search Qdrant and generate an answer using local LLM.
     """
     retriever = QdrantRetriever()
+    generator = LocalGenerator(model)
 
-    generator = LocalGenerator("llama3")
+    click.echo(f"Searching for top {top_k} results..")
+    results = retriever.search(query, top_k=top_k)
 
-    print(f"Searching for top {top_k} results..")
-    results = retriever.search(q, top_k=top_k)
     # for DEBUG only
-    print("Raw result sample:\n", results[0])
+    # print("Raw result sample:\n", results[0])
 
     if not results:
-        print("No results found.")
+        click.echo("No results found.")
         return
 
     context_chunks = [r["text"] for r in results]
-    print("Generating answer..")
-    answer_text = generator.generate_answer(q, context_chunks)
-    print("\nAnswer:\n")
-    print(answer_text)
+    click.echo("Generating answer..")
 
-    print("\nSources:\n")
+    answer_text = generator.generate_answer(query, context_chunks)
+    click.echo("\nAnswer:\n")
+    click.echo(answer_text)
+
+    click.echo("\nSources:\n")
     results = only_unique(results)
     for i, r in enumerate(results, start=1):
-        print(f"{i}. {r['path']} (score={r['score']:.4f})")
+        click.echo(f"{i}. {r['path']} (score={r['score']:.4f})")
 
 
 def only_unique(xz: list) -> list:
     """
-    Helper fn to leave only unique results from a given list.
+    Helper fn to return only unique results by file path.
     """
     unique = []
     seen = set()
@@ -157,48 +185,9 @@ def only_unique(xz: list) -> list:
 
 
 if __name__ == "__main__":
-    import sys
     # import gc
     # import warnings
 
     # warnings.filterwarnings("always", category=ResourceWarning)
     # gc.collect()
-
-    if len(sys.argv) < 2:
-        print("Usage:")
-        print(" python -m cli.main ingest <directory> [--force]")
-        print(" python -m cli.main search <query> [--top-k N]")
-        sys.exit(1)
-
-    command = sys.argv[1]
-
-    if command == "ingest":
-        if len(sys.argv) < 3:
-            print("Usage: python -m cli.main ingest <directory> [--force]")
-            sys.exit(1)
-        data_dir = sys.argv[2]
-        force_flag = "--force" in sys.argv
-        ingest(data_dir, force=force_flag)
-
-    elif command == "search":
-        if len(sys.argv) < 3:
-            print("Usage: python -m cli.main search <query> [--top-k N]")
-            sys.exit(1)
-
-        q = sys.argv[2]
-        top_k = 5
-        if "--top-k" in sys.argv:
-            idx = sys.argv.index("--top-k")
-            if idx + 1 < len(sys.argv):
-                top_k = int(sys.argv[idx + 1])
-        search(q, top_k=top_k)
-
-    elif command == "answer":
-        if len(sys.argv) < 3:
-            print("Usage: python -m cli.main answer <query>")
-            sys.exit(1)
-        query = " ".join(sys.argv[2:])
-        answer(query)
-
-    else:
-        print(f"Unknown command: {command}")
+    cli()
