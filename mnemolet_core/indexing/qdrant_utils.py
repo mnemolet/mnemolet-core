@@ -1,11 +1,13 @@
 from qdrant_client import QdrantClient
 
+URL = "http://localhost:6333"
+
 
 def get_collection_stats(collection_name: str = "documents") -> dict:
     """
     Return collection stats as a dictionary.
     """
-    client = QdrantClient(url="http://localhost:6333")
+    client = QdrantClient(url=URL)
     info = client.get_collection(collection_name)
 
     return {
@@ -19,3 +21,8 @@ def get_collection_stats(collection_name: str = "documents") -> dict:
         "distance": info.config.params.vectors.distance,
         "on_disk_payload": info.config.params.on_disk_payload,
     }
+
+
+def remove_collection(collection_name: str = "documents") -> None:
+    client = QdrantClient(url=URL)
+    client.delete_collection(collection_name=collection_name)

@@ -5,7 +5,7 @@ from pathlib import Path
 from mnemolet_core.ingestion.preprocessor import process_directory
 from mnemolet_core.embeddings.local_llm_embed import embed_texts_batch
 from mnemolet_core.indexing.qdrant_indexer import QdrantIndexer
-from mnemolet_core.indexing.qdrant_utils import get_collection_stats
+from mnemolet_core.indexing.qdrant_utils import get_collection_stats, remove_collection
 from mnemolet_core.query.retriever import QdrantRetriever
 from mnemolet_core.query.generator import LocalGenerator
 from mnemolet_core.storage import db_tracker
@@ -187,17 +187,16 @@ def _only_unique(xz: list) -> list:
 
 @cli.command()
 @click.option(
-    "--collection",
+    "--collection_name",
     default="documents",
-    show_default=True,
     help="Define collection name.",
 )
-def stats(collection: str):
+def stats(collection_name: str):
     """
     Output statistics about Qdrant database.
     """
     try:
-        stats = get_collection_stats(collection)
+        stats = get_collection_stats(collection_name)
     except Exception as e:
         click.echo(f"Failed to fetch stats: {e}")
         return
@@ -208,6 +207,27 @@ def stats(collection: str):
         if k != "collection_name":
             click.echo(f"{k.replace('_', ' ').title():22}: {v}")
     click.echo("-" * 60)
+
+
+@cli.command()
+@click.option(
+    "--collection_name",
+    default="documents",
+    help="Define collection name.",
+)
+def remove(collection_name: str):
+    """
+    Remove Qdrant collection.
+    """
+    click.confirm(
+        f"Are you sure you want to delete the collection '{collection_name}'?",
+        abort=True,
+    )
+    try:
+        remove_collection(collection_name)
+        click.echo(f"Collection '{collection_name}' removed successfully.")
+    except Exception as e:
+        click.echo(f"Failed to remove collection '{collection_name}': {e}")
 
 
 if __name__ == "__main__":
