@@ -5,6 +5,7 @@ from pathlib import Path
 from mnemolet_core.ingestion.preprocessor import process_directory
 from mnemolet_core.embeddings.local_llm_embed import embed_texts_batch
 from mnemolet_core.indexing.qdrant_indexer import QdrantIndexer
+from mnemolet_core.indexing.qdrant_utils import get_collection_stats
 from mnemolet_core.query.retriever import QdrantRetriever
 from mnemolet_core.query.generator import LocalGenerator
 from mnemolet_core.storage import db_tracker
@@ -164,12 +165,12 @@ def answer(query: str, top_k: int, model: str):
     click.echo(answer_text)
 
     click.echo("\nSources:\n")
-    results = only_unique(results)
+    results = _only_unique(results)
     for i, r in enumerate(results, start=1):
         click.echo(f"{i}. {r['path']} (score={r['score']:.4f})")
 
 
-def only_unique(xz: list) -> list:
+def _only_unique(xz: list) -> list:
     """
     Helper fn to return only unique results by file path.
     """
@@ -182,6 +183,31 @@ def only_unique(xz: list) -> list:
             seen.add(path)
             unique.append(x)
     return unique
+
+
+@cli.command()
+@click.option(
+    "--collection",
+    default="documents",
+    show_default=True,
+    help="Define collection name.",
+)
+def stats(collection: str):
+    """
+    Output statistics about Qdrant database.
+    """
+    try:
+        stats = get_collection_stats(collection)
+    except Exception as e:
+        click.echo(f"Failed to fetch stats: {e}")
+        return
+
+    click.echo(f"Qdrant Collection Stats: {stats['collection_name']}")
+    click.echo("-" * 60)
+    for k, v in stats.items():
+        if k != "collection_name":
+            click.echo(f"{k.replace('_', ' ').title():22}: {v}")
+    click.echo("-" * 60)
 
 
 if __name__ == "__main__":
