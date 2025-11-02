@@ -7,5 +7,9 @@ collection = "documents"
 model = "all-MiniLM-L6-v2"
 batch_size = 100
 
+[ollama]
+host = "localhost"
+port = 11434
+
 [storage]
 db_path = "./data/tracker.sqlite"

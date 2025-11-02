@@ -1,5 +1,6 @@
 import json
 import requests
+from mnemolet_core.config import OLLAMA_URL
 
 
 class LocalGenerator:
@@ -7,7 +8,7 @@ class LocalGenerator:
     Generate an answer using local LLM (via Ollama API).
     """
 
-    def __init__(self, model: str = "llama3", host: str = "http://localhost:11434"):
+    def __init__(self, model: str = "llama3", host: str = OLLAMA_URL):
         self.model = model
         self.host = host
 

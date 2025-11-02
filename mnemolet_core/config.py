@@ -11,7 +11,6 @@ def load_config(path: Path = CONFIG_PATH):
     """
     Load configuration from TOML file.
     """
-    print(path)
     with open(path, "rb") as f:
         return tomllib.load(f)
 
@@ -25,5 +24,9 @@ QDRANT_URL = f"http://{QDRANT_HOST}:{QDRANT_PORT}"
 
 EMBED_MODEL = os.getenv("EMBED_MODEL", config["embedding"]["model"])
 EMBED_BATCH = os.getenv("EMBED_BATCH", config["embedding"]["batch_size"])
+
+OLLAMA_HOST = os.getenv("OLLAMA_HOST", config["ollama"]["host"])
+OLLAMA_PORT = os.getenv("OLLAMA_PORT", config["ollama"]["port"])
+OLLAMA_URL = f"http://{OLLAMA_HOST}:{OLLAMA_PORT}"
 
 DB_PATH = Path(os.path.expanduser(config["storage"]["db_path"]))
