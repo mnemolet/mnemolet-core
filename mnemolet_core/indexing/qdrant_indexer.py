@@ -2,18 +2,16 @@ import numpy as np
 import uuid
 from qdrant_client import QdrantClient
 from qdrant_client.models import PointStruct, Distance, VectorParams
+from mnemolet_core.config import QDRANT_URL, QDRANT_COLLECTION
 
 
 class QdrantIndexer:
-    def __init__(
-        self,
-        host: str = "localhost",
-        port: int = 6333,
-        collection_name: str = "documents",
-    ):
-        url = f"http://{host}:{port}"
-        self.client = QdrantClient(url=url)
-        self.collection_name = collection_name
+    def __init__(self):
+        """
+        Init Qdrant client using config.toml.
+        """
+        self.client = QdrantClient(url=QDRANT_URL)
+        self.collection_name = QDRANT_COLLECTION
 
     def init_collection(self, vector_size: int = 384):
         """
