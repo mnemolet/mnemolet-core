@@ -6,7 +6,11 @@ from mnemolet_core.config import QDRANT_COLLECTION
 from mnemolet_core.ingestion.preprocessor import process_directory
 from mnemolet_core.embeddings.local_llm_embed import embed_texts_batch
 from mnemolet_core.indexing.qdrant_indexer import QdrantIndexer
-from mnemolet_core.indexing.qdrant_utils import get_collection_stats, remove_collection
+from mnemolet_core.indexing.qdrant_utils import (
+    get_collection_stats,
+    remove_collection,
+    list_collections,
+)
 from mnemolet_core.query.retriever import QdrantRetriever
 from mnemolet_core.query.generator import LocalGenerator
 from mnemolet_core.storage import db_tracker
@@ -229,6 +233,20 @@ def remove(collection_name: str):
         click.echo(f"Collection '{collection_name}' removed successfully.")
     except Exception as e:
         click.echo(f"Failed to remove collection '{collection_name}': {e}")
+
+
+@cli.command()
+def list_collections_cli():
+    """
+    List all Qdrant collections.
+    """
+    xz = list_collections()
+    if not xz:
+        click.echo("No collections found.")
+    else:
+        click.echo("Collections in Qdrant:")
+        for x in xz:
+            click.echo(f"- {x}")
 
 
 if __name__ == "__main__":
