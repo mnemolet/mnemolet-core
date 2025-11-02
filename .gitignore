@@ -215,3 +215,6 @@ examples/
 # embeddings
 embeddings.npy
 embeddings_metadata.json
+
+# data: SQLite db
+data/

@@ -17,11 +17,16 @@ from mnemolet_core.storage import db_tracker
 
 
 @click.group()
-def cli():
+@click.option(
+    "-v", "--verbose", count=True, help="Increase output verbosity (use -v or -vv)"
+)
+@click.pass_context
+def cli(ctx, verbose):
     """
     CLI for mnemolet.
     """
-    pass
+    ctx.ensure_object(dict)
+    ctx.obj["verbose"] = verbose
 
 
 @cli.command()
@@ -32,7 +37,8 @@ def cli():
 @click.option(
     "--batch-size", default=100, show_default=True, help="Number of chunks per batch."
 )
-def ingest(directory: str, force: bool, batch_size: int):
+@click.pass_context
+def ingest(ctx, directory: str, force: bool, batch_size: int):
     """
     Ingest files from a directory into Qdrant.
     - streams files, chunks them, embeds text and stores data in Qdrant.
@@ -40,11 +46,10 @@ def ingest(directory: str, force: bool, batch_size: int):
     start_total = time.time()
     directory = Path(directory)
 
-    click.echo(f"Starting ingestion from {directory}")
+    log(f"Starting ingestion from {directory}")
     db_tracker.init_db()
     indexer = QdrantIndexer()
     embedding_dim = None
-    # first_batch = True
     total_chunks = 0
     total_files = 0
 
@@ -57,7 +62,7 @@ def ingest(directory: str, force: bool, batch_size: int):
         first_chunk = next(process_directory(directory))
         first_embedding = next(embed_texts_batch([first_chunk["chunk"]], batch_size=1))
         embedding_dim = first_embedding.shape[1]
-        click.echo(f"Recreating Qdrant collection (dim={embedding_dim})..")
+        log(f"Recreating Qdrant collection (dim={embedding_dim})..")
         indexer.init_collection(vector_size=embedding_dim)
 
     for data in process_directory(directory):
@@ -67,11 +72,11 @@ def ingest(directory: str, force: bool, batch_size: int):
 
         # skip files already processed
         if not force and db_tracker.file_exists(file_hash):
-            click.echo(f"Skipping already ingested: {file_path}")
+            log(f"Skipping already ingested: {file_path}")
             continue
 
         if file_path not in seen_files:
-            click.echo(f"Processing file #{total_files}: {file_path}")
+            log(f"Processing file #{total_files}: {file_path}")
             total_files += 1
             seen_files.add(file_path)
 
@@ -85,7 +90,6 @@ def ingest(directory: str, force: bool, batch_size: int):
         # if batch full —> embed & store
         if len(chunk_batch) >= batch_size:
             _store_batch(indexer, chunk_batch, metadata_batch, embedding_dim, force)
-            # first_batch = False
             chunk_batch.clear()
             metadata_batch.clear()
 
@@ -102,10 +106,19 @@ def ingest(directory: str, force: bool, batch_size: int):
 
 
 def _store_batch(indexer, chunk_batch, metadata_batch, embedding_dim, force):
-    click.echo(f"Embedding batch of {len(chunk_batch)} chunks..")
+    log(f"Embedding batch of {len(chunk_batch)} chunks..")
     for embeddings in embed_texts_batch(chunk_batch, batch_size=len(chunk_batch)):
         indexer.store_embeddings(chunk_batch, embeddings, metadata_batch)
-        click.echo(f"Stored {len(chunk_batch)} chunks in Qdrant.")
+        log(f"Stored {len(chunk_batch)} chunks in Qdrant.")
+
+
+def log(message, level=1):
+    """
+    Print only if verbosity level is high enough.
+    """
+    ctx = click.get_current_context(silent=True)
+    if ctx and ctx.obj and ctx.obj.get("verbose", 0) >= level:
+        click.echo(message)
 
 
 @cli.command()
