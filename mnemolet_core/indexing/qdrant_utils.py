@@ -23,5 +23,17 @@ def get_collection_stats(collection_name: str = QDRANT_COLLECTION) -> dict:
 
 
 def remove_collection(collection_name: str = QDRANT_COLLECTION) -> None:
+    """
+    Delete Qdrant collection.
+    """
     client = QdrantClient(url=QDRANT_URL)
     client.delete_collection(collection_name=collection_name)
+
+
+def list_collections() -> list[str]:
+    """
+    Return a list of all collection names in Qdrant.
+    """
+    client = QdrantClient(url=QDRANT_URL)
+    info = client.get_collections()
+    return [c.name for c in info.collections]
