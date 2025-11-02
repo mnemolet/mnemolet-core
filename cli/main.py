@@ -2,6 +2,7 @@ import click
 import time
 from pathlib import Path
 
+from mnemolet_core.config import QDRANT_COLLECTION
 from mnemolet_core.ingestion.preprocessor import process_directory
 from mnemolet_core.embeddings.local_llm_embed import embed_texts_batch
 from mnemolet_core.indexing.qdrant_indexer import QdrantIndexer
@@ -188,7 +189,7 @@ def _only_unique(xz: list) -> list:
 @cli.command()
 @click.option(
     "--collection_name",
-    default="documents",
+    default=QDRANT_COLLECTION,
     help="Define collection name.",
 )
 def stats(collection_name: str):
@@ -212,7 +213,7 @@ def stats(collection_name: str):
 @cli.command()
 @click.option(
     "--collection_name",
-    default="documents",
+    default=QDRANT_COLLECTION,
     help="Define collection name.",
 )
 def remove(collection_name: str):
