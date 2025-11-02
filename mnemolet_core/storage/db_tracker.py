@@ -1,10 +1,10 @@
 import sqlite3
-from pathlib import Path
 from datetime import datetime, UTC
 from typing import Optional
+from mnemolet_core.config import DB_PATH
 
 
-DB_PATH = Path.home() / ".mnemolet" / "tracker.db"
+# DB_PATH = Path.home() / ".mnemolet" / "tracker.db"
 
 
 CREATE_TABLE_FILES = """

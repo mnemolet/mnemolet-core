@@ -1,0 +1,11 @@
+[qdrant]
+host = "localhost"
+port = 6333
+collection = "documents"
+
+[embedding]
+model = "all-MiniLM-L6-v2"
+batch_size = 100
+
+[storage]
+db_path = "./data/tracker.sqlite"

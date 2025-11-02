@@ -1,13 +1,12 @@
+from mnemolet_core.config import QDRANT_URL, QDRANT_COLLECTION
 from qdrant_client import QdrantClient
 
-URL = "http://localhost:6333"
 
-
-def get_collection_stats(collection_name: str = "documents") -> dict:
+def get_collection_stats(collection_name: str = QDRANT_COLLECTION) -> dict:
     """
     Return collection stats as a dictionary.
     """
-    client = QdrantClient(url=URL)
+    client = QdrantClient(url=QDRANT_URL)
     info = client.get_collection(collection_name)
 
     return {
@@ -23,6 +22,6 @@ def get_collection_stats(collection_name: str = "documents") -> dict:
     }
 
 
-def remove_collection(collection_name: str = "documents") -> None:
-    client = QdrantClient(url=URL)
+def remove_collection(collection_name: str = QDRANT_COLLECTION) -> None:
+    client = QdrantClient(url=QDRANT_URL)
     client.delete_collection(collection_name=collection_name)
