@@ -1,8 +1,11 @@
 import numpy as np
 import uuid
+import logging
 from qdrant_client import QdrantClient
 from qdrant_client.models import PointStruct, Distance, VectorParams
 from mnemolet_core.config import QDRANT_URL, QDRANT_COLLECTION
+
+logger = logging.getLogger(__name__)
 
 
 class QdrantIndexer:
@@ -47,4 +50,6 @@ class QdrantIndexer:
         info = self.client.get_collection(self.collection_name)
         points_count = info.points_count
         indexed_count = info.indexed_vectors_count
-        print(f"Upserted → total points: {points_count}, indexed: {indexed_count}")
+        logger.info(
+            f"Upserted → total points: {points_count}, indexed: {indexed_count}"
+        )

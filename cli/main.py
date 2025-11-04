@@ -1,6 +1,7 @@
 import click
 import time
 from pathlib import Path
+import logging
 
 from mnemolet_core.config import QDRANT_COLLECTION
 from mnemolet_core.ingestion.preprocessor import process_directory
@@ -15,6 +16,8 @@ from mnemolet_core.query.retriever import QdrantRetriever
 from mnemolet_core.query.generator import LocalGenerator
 from mnemolet_core.storage import db_tracker
 
+logger = logging.getLogger(__name__)
+
 
 @click.group()
 @click.option(
@@ -27,6 +30,21 @@ def cli(ctx, verbose):
     """
     ctx.ensure_object(dict)
     ctx.obj["verbose"] = verbose
+
+    # map -v to INFO, --vv to DEBUG
+    if verbose == 0:
+        level = logging.WARNING
+    elif verbose == 1:
+        level = logging.INFO
+    else:  # -vv or more
+        level = logging.DEBUG
+
+    logging.basicConfig(
+        format="%(levelname)s: %(message)s",
+        level=level,
+    )
+
+    logger.debug(f"Logger init with level={level}")
 
 
 @cli.command()
@@ -46,7 +64,7 @@ def ingest(ctx, directory: str, force: bool, batch_size: int):
     start_total = time.time()
     directory = Path(directory)
 
-    log(f"Starting ingestion from {directory}")
+    logger.info(f"Starting ingestion from {directory}")
     db_tracker.init_db()
     indexer = QdrantIndexer()
     embedding_dim = None
@@ -62,7 +80,7 @@ def ingest(ctx, directory: str, force: bool, batch_size: int):
         first_chunk = next(process_directory(directory))
         first_embedding = next(embed_texts_batch([first_chunk["chunk"]], batch_size=1))
         embedding_dim = first_embedding.shape[1]
-        log(f"Recreating Qdrant collection (dim={embedding_dim})..")
+        logger.info(f"Recreating Qdrant collection (dim={embedding_dim})..")
         indexer.init_collection(vector_size=embedding_dim)
 
     for data in process_directory(directory):
@@ -72,11 +90,11 @@ def ingest(ctx, directory: str, force: bool, batch_size: int):
 
         # skip files already processed
         if not force and db_tracker.file_exists(file_hash):
-            log(f"Skipping already ingested: {file_path}")
+            logger.info(f"Skipping already ingested: {file_path}")
             continue
 
         if file_path not in seen_files:
-            log(f"Processing file #{total_files}: {file_path}")
+            logger.info(f"Processing file #{total_files}: {file_path}")
             total_files += 1
             seen_files.add(file_path)
 
@@ -106,7 +124,7 @@ def ingest(ctx, directory: str, force: bool, batch_size: int):
 
 
 def _store_batch(indexer, chunk_batch, metadata_batch, embedding_dim, force):
-    log(f"Embedding batch of {len(chunk_batch)} chunks..")
+    logger.info(f"Embedding batch of {len(chunk_batch)} chunks..")
     for embeddings in embed_texts_batch(chunk_batch, batch_size=len(chunk_batch)):
         indexer.store_embeddings(chunk_batch, embeddings, metadata_batch)
         log(f"Stored {len(chunk_batch)} chunks in Qdrant.")
