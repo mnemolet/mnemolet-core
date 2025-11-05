@@ -1,19 +1,20 @@
-import click
+import logging
 import time
 from pathlib import Path
-import logging
+
+import click
 
 from mnemolet_core.config import QDRANT_COLLECTION
-from mnemolet_core.ingestion.preprocessor import process_directory
 from mnemolet_core.embeddings.local_llm_embed import embed_texts_batch
 from mnemolet_core.indexing.qdrant_indexer import QdrantIndexer
 from mnemolet_core.indexing.qdrant_utils import (
     get_collection_stats,
-    remove_collection,
     list_collections,
+    remove_collection,
 )
-from mnemolet_core.query.retriever import QdrantRetriever
+from mnemolet_core.ingestion.preprocessor import process_directory
 from mnemolet_core.query.generator import LocalGenerator
+from mnemolet_core.query.retriever import QdrantRetriever
 from mnemolet_core.storage import db_tracker
 
 logger = logging.getLogger(__name__)
@@ -63,6 +64,11 @@ def ingest(ctx, directory: str, force: bool, batch_size: int):
     """
     start_total = time.time()
     directory = Path(directory)
+
+    files = list(directory.glob("**/*"))
+    if not files:
+        logger.warning("No files found to ingest")
+        return
 
     logger.info(f"Starting ingestion from {directory}")
     db_tracker.init_db()

@@ -1,7 +1,8 @@
-from pathlib import Path
-from .utils import hash_file
 from collections.abc import Iterator
+from pathlib import Path
+
 from .loader_registry import get_extractor
+from .utils import hash_file
 
 
 def stream_files(dir: Path) -> Iterator[dict[str, str, str]]:

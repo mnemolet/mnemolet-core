@@ -1,9 +1,11 @@
-import numpy as np
-import uuid
 import logging
+import uuid
+
+import numpy as np
 from qdrant_client import QdrantClient
-from qdrant_client.models import PointStruct, Distance, VectorParams
-from mnemolet_core.config import QDRANT_URL, QDRANT_COLLECTION
+from qdrant_client.models import Distance, PointStruct, VectorParams
+
+from mnemolet_core.config import QDRANT_COLLECTION, QDRANT_URL
 
 logger = logging.getLogger(__name__)
 

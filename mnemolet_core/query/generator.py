@@ -1,5 +1,7 @@
 import json
+
 import requests
+
 from mnemolet_core.config import OLLAMA_URL
 
 

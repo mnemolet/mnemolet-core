@@ -1,7 +1,9 @@
 from typing import Any
+
 from qdrant_client import QdrantClient
 from sentence_transformers import SentenceTransformer
-from mnemolet_core.config import QDRANT_URL, QDRANT_COLLECTION, EMBED_MODEL
+
+from mnemolet_core.config import EMBED_MODEL, QDRANT_COLLECTION, QDRANT_URL
 
 
 class QdrantRetriever:

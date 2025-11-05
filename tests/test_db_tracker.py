@@ -1,12 +1,13 @@
+import os
+
 from mnemolet_core.storage.db_tracker import (
-    init_db,
+    DB_PATH,
     add_file,
     file_exists,
+    init_db,
     list_files,
     mark_indexed,
-    DB_PATH,
 )
-import os
 
 
 def setup_module(module):

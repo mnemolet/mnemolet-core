@@ -1,3 +1,7 @@
+[tool.ruff.lint]
+# enable isort rules
+select = ["E", "F", "I"]
+
 [project]
 name = "mnemolet-core"
 version = "0.1.0"

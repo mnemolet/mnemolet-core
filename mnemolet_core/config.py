@@ -1,6 +1,6 @@
+import os
 import tomllib
 from pathlib import Path
-import os
 
 CONFIG_PATH = Path(
     os.getenv("CONFIG_PATH", Path(__file__).resolve().parent.parent / "config.toml")

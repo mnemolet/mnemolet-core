@@ -1,5 +1,6 @@
-from mnemolet_core.config import QDRANT_URL, QDRANT_COLLECTION
 from qdrant_client import QdrantClient
+
+from mnemolet_core.config import QDRANT_COLLECTION, QDRANT_URL
 
 
 def get_collection_stats(collection_name: str = QDRANT_COLLECTION) -> dict:

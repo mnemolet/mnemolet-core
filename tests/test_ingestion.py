@@ -1,5 +1,6 @@
 import tempfile
 from pathlib import Path
+
 from mnemolet_core.ingestion.preprocessor import process_directory
 from mnemolet_core.ingestion.utils import hash_file
 

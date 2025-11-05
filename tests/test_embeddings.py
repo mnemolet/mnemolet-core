@@ -1,4 +1,5 @@
 import numpy as np
+
 from mnemolet_core.embeddings.local_llm_embed import embed_texts_batch
 
 

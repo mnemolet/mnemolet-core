@@ -1,11 +1,8 @@
 import sqlite3
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from typing import Optional
+
 from mnemolet_core.config import DB_PATH
-
-
-# DB_PATH = Path.home() / ".mnemolet" / "tracker.db"
-
 
 CREATE_TABLE_FILES = """
 CREATE TABLE IF NOT EXISTS files (
@@ -36,7 +33,6 @@ def init_db():
     """
     with get_connection() as conn:
         conn.execute(CREATE_TABLE_FILES)
-        # conn.execute(CREATE_TABLE_EMBEDDINGS_METADATA)
 
 
 def add_file(path: str, file_hash: str):
