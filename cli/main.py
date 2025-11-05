@@ -3,6 +3,7 @@ import time
 from pathlib import Path
 
 import click
+from tqdm import tqdm
 
 from mnemolet_core.config import QDRANT_COLLECTION
 from mnemolet_core.embeddings.local_llm_embed import embed_texts_batch
@@ -65,20 +66,24 @@ def ingest(ctx, directory: str, force: bool, batch_size: int):
     start_total = time.time()
     directory = Path(directory)
 
-    files = list(directory.glob("**/*"))
+    files = list(directory.rglob("*"))
+    files = [f for f in files if f.is_file()]
     if not files:
-        logger.warning("No files found to ingest")
+        logger.warning("No files found to ingest.")
         return
+    logger.info(f"Found {len(files)} files to ingest from {directory}.")
 
     logger.info(f"Starting ingestion from {directory}")
     db_tracker.init_db()
     indexer = QdrantIndexer()
     embedding_dim = None
     total_chunks = 0
-    total_files = 0
+    total_files = 0  # can be actually different with files count
 
     chunk_batch = []
     metadata_batch = []
+
+    pbar = tqdm(total=len(files), desc="Ingesting files", unit="file")
 
     seen_files = set()
 
@@ -103,6 +108,7 @@ def ingest(ctx, directory: str, force: bool, batch_size: int):
             logger.info(f"Processing file #{total_files}: {file_path}")
             total_files += 1
             seen_files.add(file_path)
+            pbar.update(1)  # increment progress bar
 
         db_tracker.add_file(data["path"], data["hash"])
 
@@ -120,6 +126,8 @@ def ingest(ctx, directory: str, force: bool, batch_size: int):
     # handle the rest
     if chunk_batch:
         _store_batch(indexer, chunk_batch, metadata_batch, embedding_dim, force)
+
+    pbar.close()
 
     total_time = time.time() - start_total
 
