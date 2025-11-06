@@ -1,8 +1,11 @@
 import json
+import logging
 
 import requests
 
 from mnemolet_core.config import OLLAMA_URL
+
+logger = logging.getLogger(__name__)
 
 
 class LocalGenerator:
@@ -33,12 +36,14 @@ class LocalGenerator:
                     "stream": False,
                 },
             )
+            response.raise_for_status()  # raise for non 200 status
             data = response.json()
             return data.get("response", "").strip()
+        except requests.RequestException as e:
+            logger.error(f"Request failed: {e}")
+            raise RuntimeError(f"Failed to generate answer: {e}") from e
         except json.JSONDecodeError as e:
-            print(f"JSON decode failed {e}, raw Ollama output:")
-            url = "http://localhost:11434/api/generate"
-            payload = {"model": self.model, "prompt": prompt, "stream": False}
-            r = requests.post(url, json=payload)
-            print(r.text[:1000])
-            raise
+            logger.error(
+                f"JSON decode failed: {e}. Raw response: {response.text[:1000]}"
+            )
+            raise RuntimeError(f"Invalid JSON response from Ollama: {e}") from e
