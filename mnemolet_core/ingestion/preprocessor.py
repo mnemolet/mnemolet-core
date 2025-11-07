@@ -1,4 +1,4 @@
-from .base_loader import stream_files
+from .loader import stream_files
 
 
 def chunk_text(text: str, max_length: int = 500) -> list[str]:

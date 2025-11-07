@@ -1,7 +1,8 @@
 from collections.abc import Iterator
 from pathlib import Path
 
-from .loader_registry import get_extractor
+# from .loader_registry import get_extractor
+from .extractors.registry import get_extractor
 from .utils import hash_file
 
 
@@ -10,12 +11,14 @@ def stream_files(dir: Path) -> Iterator[dict[str, str, str]]:
     Yield for supported file types.
     """
     for file in dir.rglob("*"):
-        file_hash = hash_file(file)
         extractor = get_extractor(file)
         if not extractor:
             continue
+
+        file_hash = hash_file(file)
+
         try:
-            for content_part in extractor(file):
+            for content_part in extractor.extract(file):
                 data = {
                     "path": str(file.resolve()),
                     "content": content_part,
