@@ -1,9 +1,11 @@
+import logging
 from collections.abc import Iterator
 from pathlib import Path
 
-# from .loader_registry import get_extractor
 from .extractors.registry import get_extractor
 from .utils import hash_file
+
+logger = logging.getLogger(__name__)
 
 
 def stream_files(dir: Path) -> Iterator[dict[str, str, str]]:
@@ -12,6 +14,7 @@ def stream_files(dir: Path) -> Iterator[dict[str, str, str]]:
     """
     for file in dir.rglob("*"):
         extractor = get_extractor(file)
+        logger.debug(" -> extractor: ", extractor)
         if not extractor:
             continue
 
