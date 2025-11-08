@@ -4,7 +4,7 @@ from typing import Iterator
 from docx import Document
 
 
-def extract_docx(file: Path, chunk_size: int = 1024 * 1024) -> Iterator[str]:
+def extract_docx(file: Path, chunk_size: int) -> Iterator[str]:
     """
     Yield text chunks from a DOCX.
 

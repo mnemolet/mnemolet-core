@@ -3,7 +3,7 @@ from pathlib import Path
 from pypdf import PdfReader
 
 
-def extract_pdf(file: Path, chunk_size: int = 1024 * 1024) -> str:
+def extract_pdf(file: Path, chunk_size: int) -> str:
     """
     Yield text chunks from a PDF.
 
