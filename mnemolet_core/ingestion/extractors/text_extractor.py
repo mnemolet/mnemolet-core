@@ -5,7 +5,47 @@ from .base import Extractor
 
 
 class TextExtractor(Extractor):
-    extensions = {".txt"}
+    extensions = {
+        # plain text
+        ".txt",
+        ".log",
+        ".conf",
+        ".ini",
+        ".json",
+        ".yml",
+        ".toml",
+        # code
+        ".py",
+        ".js",
+        ".ts",
+        ".java",
+        ".cpp",
+        ".c",
+        ".h",
+        ".hpp",
+        ".rs",
+        ".go",
+        ".sh",
+        ".bash",
+        ".ps1",
+        ".rb",
+        ".php",
+        "pl",
+        # markdown
+        # TODO: need additional work for csv and html
+        ".md",
+        ".html",
+        ".xml",
+        ".csv",
+        ".tsv",
+        ".css",
+        # documentation
+        ".rst",
+        ".tex",
+        ".jinja",
+        ".jinja2",
+        ".tpl",
+    }
 
     def extract(self, file: Path) -> Iterator[str]:
         """
