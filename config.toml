@@ -2,6 +2,10 @@
 host = "localhost"
 port = 6333
 collection = "documents"
+top_k = 5
+
+[ingestion]
+chunk_size = 1048576 # 1Mb
 
 [embedding]
 model = "all-MiniLM-L6-v2"

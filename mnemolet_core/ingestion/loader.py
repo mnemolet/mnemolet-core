@@ -14,7 +14,7 @@ def stream_files(dir: Path) -> Iterator[dict[str, str, str]]:
     """
     for file in dir.rglob("*"):
         extractor = get_extractor(file)
-        logger.debug(" -> extractor: ", extractor)
+        logger.debug(f" -> extractor: {extractor}")
         if not extractor:
             continue
 

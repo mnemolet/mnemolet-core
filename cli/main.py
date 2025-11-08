@@ -5,7 +5,7 @@ from pathlib import Path
 import click
 from tqdm import tqdm
 
-from mnemolet_core.config import QDRANT_COLLECTION
+from mnemolet_core.config import QDRANT_COLLECTION, TOP_K
 from mnemolet_core.embeddings.local_llm_embed import embed_texts_batch
 from mnemolet_core.indexing.qdrant_indexer import QdrantIndexer
 from mnemolet_core.indexing.qdrant_utils import (
@@ -16,9 +16,6 @@ from mnemolet_core.indexing.qdrant_utils import (
 from mnemolet_core.ingestion.preprocessor import process_directory
 from mnemolet_core.query.generation.generate_answer import generate_answer
 from mnemolet_core.query.retrieval.search_documents import search_documents
-
-# from mnemolet_core.query.generator import LocalGenerator
-# from mnemolet_core.query.retriever import QdrantRetriever
 from mnemolet_core.storage import db_tracker
 
 logger = logging.getLogger(__name__)
@@ -44,10 +41,15 @@ def cli(ctx, verbose):
     else:  # -vv or more
         level = logging.DEBUG
 
-    logging.basicConfig(
-        format="%(levelname)s: %(message)s",
-        level=level,
-    )
+    # reset existing handlers
+    root_logger = logging.getLogger()
+    if root_logger.hasHandlers():
+        root_logger.handlers.clear()
+
+    handler = logging.StreamHandler()
+    handler.setFormatter(logging.Formatter("%(levelname)s: %(message)s"))
+    root_logger.addHandler(handler)
+    root_logger.setLevel(level)
 
     logger.debug(f"Logger init with level={level}")
 
@@ -150,7 +152,7 @@ def _store_batch(indexer, chunk_batch, metadata_batch, embedding_dim, force):
 @cli.command()
 @click.argument("query", type=str)
 @click.option(
-    "--top-k", default=5, show_default=True, help="Number of results to retrieve."
+    "--top-k", default=TOP_K, show_default=True, help="Number of results to retrieve."
 )
 def search(query: str, top_k: int):
     """
@@ -173,7 +175,7 @@ def search(query: str, top_k: int):
 @click.argument("query", type=str)
 @click.option(
     "--top-k",
-    default=3,
+    default=TOP_K,
     show_default=True,
     help="Number of context chunks for generation.",
 )
