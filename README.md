@@ -33,3 +33,28 @@ podman run -p 6333:6333 \
     -v ./qdrant_storage:/qdrant/storage \
     docker.io/qdrant/qdrant
 ```
+
+## API
+
+The API is implemented using [FastAPI](https://fastapi.tiangolo.com/).
+
+### Available Endpoint
+
+- **`GET /search`**: Search indexed texts.
+
+**Query Parameters:**
+- `query` (str) - search query.
+- `top_k` (int, optional) - number of results to return (default: 3).
+
+### Running the API
+
+Start the FastAPI server with:
+`uv run uvicorn api.server:app --reload`
+
+### Testing the Endpoint
+
+`curl "http://127.0.0.1:8000/search?query=<query>"`
+
+or 
+
+`curl "http://127.0.0.1:8000/search?query=<query>&top_k=2"`

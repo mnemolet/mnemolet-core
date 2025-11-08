@@ -14,8 +14,11 @@ from mnemolet_core.indexing.qdrant_utils import (
     remove_collection,
 )
 from mnemolet_core.ingestion.preprocessor import process_directory
-from mnemolet_core.query.generator import LocalGenerator
-from mnemolet_core.query.retriever import QdrantRetriever
+from mnemolet_core.query.generation.generate_answer import generate_answer
+from mnemolet_core.query.retrieval.search_documents import search_documents
+
+# from mnemolet_core.query.generator import LocalGenerator
+# from mnemolet_core.query.retriever import QdrantRetriever
 from mnemolet_core.storage import db_tracker
 
 logger = logging.getLogger(__name__)
@@ -141,16 +144,7 @@ def _store_batch(indexer, chunk_batch, metadata_batch, embedding_dim, force):
     logger.info(f"Embedding batch of {len(chunk_batch)} chunks..")
     for embeddings in embed_texts_batch(chunk_batch, batch_size=len(chunk_batch)):
         indexer.store_embeddings(chunk_batch, embeddings, metadata_batch)
-        log(f"Stored {len(chunk_batch)} chunks in Qdrant.")
-
-
-def log(message, level=1):
-    """
-    Print only if verbosity level is high enough.
-    """
-    ctx = click.get_current_context(silent=True)
-    if ctx and ctx.obj and ctx.obj.get("verbose", 0) >= level:
-        click.echo(message)
+        logger.info(f"Stored {len(chunk_batch)} chunks in Qdrant.")
 
 
 @cli.command()
@@ -162,8 +156,7 @@ def search(query: str, top_k: int):
     """
     Search Qdrant for relevant documents.
     """
-    retriever = QdrantRetriever()
-    results = retriever.search(query, top_k=top_k)
+    results = search_documents(query, top_k=top_k)
 
     if not results:
         click.echo("No results found.")
@@ -194,25 +187,15 @@ def answer(query: str, top_k: int, model: str):
     """
     Search Qdrant and generate an answer using local LLM.
     """
-    retriever = QdrantRetriever()
-    generator = LocalGenerator(model)
-
-    click.echo(f"Searching for top {top_k} results..")
-    results = retriever.search(query, top_k=top_k)
+    click.echo("Generating answer..")
+    results = search_documents(query, top_k)
+    answer = generate_answer(query, top_k)
 
     # for DEBUG only
     # print("Raw result sample:\n", results[0])
 
-    if not results:
-        click.echo("No results found.")
-        return
-
-    context_chunks = [r["text"] for r in results]
-    click.echo("Generating answer..")
-
-    answer_text = generator.generate_answer(query, context_chunks)
     click.echo("\nAnswer:\n")
-    click.echo(answer_text)
+    click.echo(answer)
 
     click.echo("\nSources:\n")
     results = _only_unique(results)
