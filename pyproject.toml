@@ -23,6 +23,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "git-filter-repo>=2.47.0",
     "pytest>=8.4.2",
     "ruff>=0.14.0",
 ]
