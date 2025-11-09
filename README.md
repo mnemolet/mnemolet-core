@@ -18,6 +18,10 @@ system that runs entirely **locally**: no API keys, no cloud.
 
 ## Run Qdrant
 
+Before running the container, create a storage directory:
+
+`$ mkdir -p ./qdrant_storage`
+
 with docker:
 
 ```
