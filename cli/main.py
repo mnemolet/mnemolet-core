@@ -1,11 +1,13 @@
 import logging
+import sys
 import time
+from functools import wraps
 from pathlib import Path
 
 import click
 from tqdm import tqdm
 
-from mnemolet_core.config import QDRANT_COLLECTION, TOP_K
+from mnemolet_core.config import QDRANT_COLLECTION, QDRANT_URL, TOP_K
 from mnemolet_core.embeddings.local_llm_embed import embed_texts_batch
 from mnemolet_core.indexing.qdrant_indexer import QdrantIndexer
 from mnemolet_core.indexing.qdrant_utils import (
@@ -17,8 +19,23 @@ from mnemolet_core.ingestion.preprocessor import process_directory
 from mnemolet_core.query.generation.generate_answer import generate_answer
 from mnemolet_core.query.retrieval.search_documents import search_documents
 from mnemolet_core.storage import db_tracker
+from mnemolet_core.utils.qdrant import check_qdrant_status
 
 logger = logging.getLogger(__name__)
+
+
+def requires_qdrant(f):
+    """
+    Decorator to check Qdrant before running a command.
+    """
+
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if not check_qdrant_status(QDRANT_URL):
+            sys.exit(1)
+        return f(*args, **kwargs)
+
+    return wrapper
 
 
 @click.group()
@@ -63,6 +80,7 @@ def cli(ctx, verbose):
     "--batch-size", default=100, show_default=True, help="Number of chunks per batch."
 )
 @click.pass_context
+@requires_qdrant
 def ingest(ctx, directory: str, force: bool, batch_size: int):
     """
     Ingest files from a directory into Qdrant.
@@ -154,6 +172,7 @@ def _store_batch(indexer, chunk_batch, metadata_batch, embedding_dim, force):
 @click.option(
     "--top-k", default=TOP_K, show_default=True, help="Number of results to retrieve."
 )
+@requires_qdrant
 def search(query: str, top_k: int):
     """
     Search Qdrant for relevant documents.
@@ -185,6 +204,7 @@ def search(query: str, top_k: int):
     show_default=True,
     help="Local model to use for generation.",
 )
+@requires_qdrant
 def answer(query: str, top_k: int, model: str):
     """
     Search Qdrant and generate an answer using local LLM.
@@ -192,9 +212,6 @@ def answer(query: str, top_k: int, model: str):
     click.echo("Generating answer..")
     results = search_documents(query, top_k)
     answer = generate_answer(query, top_k)
-
-    # for DEBUG only
-    # print("Raw result sample:\n", results[0])
 
     click.echo("\nAnswer:\n")
     click.echo(answer)
@@ -226,6 +243,7 @@ def _only_unique(xz: list) -> list:
     default=QDRANT_COLLECTION,
     help="Define collection name.",
 )
+@requires_qdrant
 def stats(collection_name: str):
     """
     Output statistics about Qdrant database.
@@ -250,6 +268,7 @@ def stats(collection_name: str):
     default=QDRANT_COLLECTION,
     help="Define collection name.",
 )
+@requires_qdrant
 def remove(collection_name: str):
     """
     Remove Qdrant collection.
@@ -266,6 +285,7 @@ def remove(collection_name: str):
 
 
 @cli.command()
+@requires_qdrant
 def list_collections_cli():
     """
     List all Qdrant collections.
@@ -280,9 +300,4 @@ def list_collections_cli():
 
 
 if __name__ == "__main__":
-    # import gc
-    # import warnings
-
-    # warnings.filterwarnings("always", category=ResourceWarning)
-    # gc.collect()
     cli()
