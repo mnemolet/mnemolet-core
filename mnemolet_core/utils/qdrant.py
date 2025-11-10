@@ -38,6 +38,9 @@ class QdrantManager:
             logger.error(f"Could not connect to Qdrant at {self.qdrant_url}: {e}")
             return False
 
+    def collection_exists(self, collection_name: str) -> bool:
+        return self.client.collection_exists(collection_name=collection_name)
+
     def get_collection_stats(self, collection_name: str) -> dict:
         """
         Return collection stats as a dictionary.
