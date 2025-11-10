@@ -7,7 +7,11 @@ from pathlib import Path
 import click
 from tqdm import tqdm
 
-from mnemolet_core.config import QDRANT_COLLECTION, QDRANT_URL, TOP_K
+from mnemolet_core.config import (
+    QDRANT_COLLECTION,
+    QDRANT_URL,
+    TOP_K,
+)
 from mnemolet_core.embeddings.local_llm_embed import embed_texts_batch
 from mnemolet_core.indexing.qdrant_indexer import QdrantIndexer
 from mnemolet_core.indexing.qdrant_utils import (
@@ -98,7 +102,7 @@ def ingest(ctx, directory: str, force: bool, batch_size: int):
 
     logger.info(f"Starting ingestion from {directory}")
     db_tracker.init_db()
-    indexer = QdrantIndexer()
+    indexer = QdrantIndexer(QDRANT_URL, QDRANT_COLLECTION)
     embedding_dim = None
     total_chunks = 0
     total_files = 0  # can be actually different with files count
