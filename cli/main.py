@@ -14,16 +14,11 @@ from mnemolet_core.config import (
 )
 from mnemolet_core.embeddings.local_llm_embed import embed_texts_batch
 from mnemolet_core.indexing.qdrant_indexer import QdrantIndexer
-from mnemolet_core.indexing.qdrant_utils import (
-    get_collection_stats,
-    list_collections,
-    remove_collection,
-)
 from mnemolet_core.ingestion.preprocessor import process_directory
 from mnemolet_core.query.generation.generate_answer import generate_answer
 from mnemolet_core.query.retrieval.search_documents import search_documents
 from mnemolet_core.storage import db_tracker
-from mnemolet_core.utils.qdrant import check_qdrant_status
+from mnemolet_core.utils.qdrant import QdrantManager
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +30,8 @@ def requires_qdrant(f):
 
     @wraps(f)
     def wrapper(*args, **kwargs):
-        if not check_qdrant_status(QDRANT_URL):
+        qm = QdrantManager(QDRANT_URL)
+        if not qm.check_qdrant_status():
             sys.exit(1)
         return f(*args, **kwargs)
 
@@ -253,7 +249,8 @@ def stats(collection_name: str):
     Output statistics about Qdrant database.
     """
     try:
-        stats = get_collection_stats(collection_name)
+        qm = QdrantManager(QDRANT_URL)
+        stats = qm.get_collection_stats(collection_name)
     except Exception as e:
         click.echo(f"Failed to fetch stats: {e}")
         return
@@ -282,7 +279,8 @@ def remove(collection_name: str):
         abort=True,
     )
     try:
-        remove_collection(collection_name)
+        qm = QdrantManager(QDRANT_URL)
+        qm.remove_collection(collection_name)
         click.echo(f"Collection '{collection_name}' removed successfully.")
     except Exception as e:
         click.echo(f"Failed to remove collection '{collection_name}': {e}")
@@ -294,7 +292,8 @@ def list_collections_cli():
     """
     List all Qdrant collections.
     """
-    xz = list_collections()
+    qm = QdrantManager(QDRANT_URL)
+    xz = qm.list_collections()
     if not xz:
         click.echo("No collections found.")
     else:
