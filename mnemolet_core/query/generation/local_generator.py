@@ -3,8 +3,6 @@ import logging
 
 import requests
 
-from mnemolet_core.config import OLLAMA_URL
-
 logger = logging.getLogger(__name__)
 
 
@@ -13,9 +11,9 @@ class LocalGenerator:
     Generate an answer using local LLM (via Ollama API).
     """
 
-    def __init__(self, model: str = "llama3", host: str = OLLAMA_URL):
+    def __init__(self, ollama_url: str, model: str):
+        self.ollama_url = ollama_url
         self.model = model
-        self.host = host
 
     def generate_answer(self, query: str, context_chunks: list[str]) -> str:
         """
@@ -29,7 +27,7 @@ class LocalGenerator:
 
         try:
             response = requests.post(
-                f"{self.host}/api/generate",
+                f"{self.ollama_url}/api/generate",
                 json={
                     "model": self.model,
                     "prompt": prompt,

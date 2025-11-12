@@ -8,6 +8,8 @@ import click
 from tqdm import tqdm
 
 from mnemolet_core.config import (
+    EMBED_MODEL,
+    OLLAMA_URL,
     QDRANT_COLLECTION,
     QDRANT_URL,
     TOP_K,
@@ -177,7 +179,13 @@ def search(query: str, top_k: int):
     """
     Search Qdrant for relevant documents.
     """
-    results = search_documents(query, top_k=top_k)
+    results = search_documents(
+        qdrant_url=QDRANT_URL,
+        collection_name=QDRANT_COLLECTION,
+        embed_model=EMBED_MODEL,
+        query=query,
+        top_k=top_k,
+    )
 
     if not results:
         click.echo("No results found.")
@@ -199,42 +207,39 @@ def search(query: str, top_k: int):
     help="Number of context chunks for generation.",
 )
 @click.option(
-    "--model",
+    "--ollama-url",
+    default=OLLAMA_URL,
+    show_default=True,
+    help="Ollama url",
+)
+@click.option(
+    "--ollama-model",
     default="llama3",
     show_default=True,
     help="Local model to use for generation.",
 )
 @requires_qdrant
-def answer(query: str, top_k: int, model: str):
+def answer(ollama_url: str, query: str, top_k: int, ollama_model: str):
     """
     Search Qdrant and generate an answer using local LLM.
     """
     click.echo("Generating answer..")
-    results = search_documents(query, top_k)
-    answer = generate_answer(query, top_k)
+    answer, results = generate_answer(
+        qdrant_url=QDRANT_URL,
+        collection_name=QDRANT_COLLECTION,
+        embed_model=EMBED_MODEL,
+        ollama_url=OLLAMA_URL,
+        model=ollama_model,
+        query=query,
+        top_k=top_k,
+    )
 
     click.echo("\nAnswer:\n")
     click.echo(answer)
 
     click.echo("\nSources:\n")
-    results = _only_unique(results)
     for i, r in enumerate(results, start=1):
         click.echo(f"{i}. {r['path']} (score={r['score']:.4f})")
-
-
-def _only_unique(xz: list) -> list:
-    """
-    Helper fn to return only unique results by file path.
-    """
-    unique = []
-    seen = set()
-
-    for x in xz:
-        path = x["path"]
-        if path not in seen:
-            seen.add(path)
-            unique.append(x)
-    return unique
 
 
 @cli.command()

@@ -3,13 +3,12 @@ from typing import Any
 from qdrant_client import QdrantClient
 from sentence_transformers import SentenceTransformer
 
-from mnemolet_core.config import EMBED_MODEL, QDRANT_COLLECTION, QDRANT_URL
-
 
 class QdrantRetriever:
-    def __init__(self, model_name=EMBED_MODEL, url=QDRANT_URL):
-        self.model = SentenceTransformer(model_name)
-        self.client = QdrantClient(url)
+    def __init__(self, qdrant_url: str, collection_name, model: str):
+        self.model = SentenceTransformer(model)
+        self.client = QdrantClient(qdrant_url)
+        self.collection_name = collection_name
 
     def search(
         self, query: str, top_k: int = 5, min_score: float = 0.35
@@ -17,7 +16,7 @@ class QdrantRetriever:
         query_vector = self.model.encode(query).tolist()
 
         results = self.client.query_points(
-            collection_name=QDRANT_COLLECTION,
+            collection_name=self.collection_name,
             query=query_vector,
             limit=top_k,
             with_payload=True,

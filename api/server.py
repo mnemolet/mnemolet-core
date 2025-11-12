@@ -1,7 +1,12 @@
 from fastapi import FastAPI, HTTPException
 
 from mnemolet_core.config import (
+    EMBED_MODEL,
+    OLLAMA_MODEL,
+    OLLAMA_URL,
+    QDRANT_COLLECTION,
     QDRANT_URL,
+    TOP_K,
 )
 from mnemolet_core.query.generation.generate_answer import generate_answer
 from mnemolet_core.query.retrieval.search_documents import search_documents
@@ -11,20 +16,48 @@ app = FastAPI(title="MnemoLet API", version="0.0.1")
 
 
 @app.get("/search")
-def search(query: str, top_k: int = 3):
+def search(
+    query: str,
+    qdrant_url: str = QDRANT_URL,
+    collection_name: str = QDRANT_COLLECTION,
+    embed_model: str = EMBED_MODEL,
+    top_k: int = TOP_K,
+):
     """
     Search documents in Qdrant.
     """
-    results = search_documents(query, top_k=top_k)
+    results = search_documents(
+        qdrant_url=QDRANT_URL,
+        collection_name=QDRANT_COLLECTION,
+        embed_model=EMBED_MODEL,
+        query=query,
+        top_k=top_k,
+    )
     return {"results": results}
 
 
 @app.get("/answer")
-def answer(query: str, top_k: int = 3):
+def answer(
+    query: str,
+    qdrant_url: str = QDRANT_URL,
+    collection_name: str = QDRANT_COLLECTION,
+    embed_model: str = EMBED_MODEL,
+    ollama_url: str = OLLAMA_URL,
+    ollama_model: str = OLLAMA_MODEL,
+    top_k: int = TOP_K,
+):
     """
     Generate answer from local LLM.
     """
-    answer = generate_answer(query, top_k)
+    answer, _ = generate_answer(
+        qdrant_url=QDRANT_URL,
+        collection_name=QDRANT_COLLECTION,
+        embed_model=EMBED_MODEL,
+        ollama_url=OLLAMA_URL,
+        model=ollama_model,
+        query=query,
+        top_k=top_k,
+    )
     return {"response": answer}
 
 
