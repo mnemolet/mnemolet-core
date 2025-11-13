@@ -7,6 +7,7 @@ from pathlib import Path
 import click
 from tqdm import tqdm
 
+from cli.commands.config import init_config
 from mnemolet_core.config import (
     EMBED_MODEL,
     OLLAMA_URL,
@@ -306,6 +307,8 @@ def list_collections_cli():
         for x in xz:
             click.echo(f"- {x}")
 
+
+cli.add_command(init_config)
 
 if __name__ == "__main__":
     cli()
