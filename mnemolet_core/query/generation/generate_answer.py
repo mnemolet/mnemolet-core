@@ -1,5 +1,7 @@
 import logging
 
+from mnemolet_core.utils.utils import filter_by_min_score
+
 from ..retrieval.search_documents import search_documents
 from .local_generator import LocalGenerator
 
@@ -14,6 +16,7 @@ def generate_answer(
     model: str,
     query: str,
     top_k: int,
+    min_score: float,
 ) -> tuple[str, list[dict]]:
     """
     Wrapper around LocalGenerator.
@@ -23,15 +26,17 @@ def generate_answer(
         qdrant_url, collection_name, embed_model, query, top_k=top_k
     )
 
-    if not results:
+    filtered_results = filter_by_min_score(results, min_score)
+
+    if not filtered_results:
         return "No relevant information found.", []
 
     generator = LocalGenerator(ollama_url, model)
-    context_chunks = [r["text"] for r in results]
+    context_chunks = [r["text"] for r in filtered_results]
     logger.info("Generating answer..")
 
     answer = generator.generate_answer(query, context_chunks)
-    results = _only_unique(results)
+    results = _only_unique(filtered_results)
 
     return answer, results
 

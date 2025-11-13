@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 
 from mnemolet_core.config import (
     EMBED_MODEL,
+    MIN_SCORE,
     OLLAMA_MODEL,
     OLLAMA_URL,
     QDRANT_COLLECTION,
@@ -57,6 +58,7 @@ def answer(
         model=ollama_model,
         query=query,
         top_k=top_k,
+        min_score=MIN_SCORE,
     )
     return {"response": answer}
 

@@ -10,6 +10,7 @@ from tqdm import tqdm
 from cli.commands.config import init_config
 from mnemolet_core.config import (
     EMBED_MODEL,
+    MIN_SCORE,
     OLLAMA_URL,
     QDRANT_COLLECTION,
     QDRANT_URL,
@@ -22,6 +23,7 @@ from mnemolet_core.query.generation.generate_answer import generate_answer
 from mnemolet_core.query.retrieval.search_documents import search_documents
 from mnemolet_core.storage import db_tracker
 from mnemolet_core.utils.qdrant import QdrantManager
+from mnemolet_core.utils.utils import filter_by_min_score
 
 logger = logging.getLogger(__name__)
 
@@ -188,12 +190,14 @@ def search(query: str, top_k: int):
         top_k=top_k,
     )
 
-    if not results:
+    filtered_results = filter_by_min_score(results, MIN_SCORE)
+
+    if not filtered_results:
         click.echo("No results found.")
         return
 
     click.echo("\nTop results:\n")
-    for i, r in enumerate(results, start=1):
+    for i, r in enumerate(filtered_results, start=1):
         click.echo(
             f"{i}. (score={r['score']:.4f}) (path={r['path']}) {r['text'][:200]}...\n"
         )
@@ -233,14 +237,16 @@ def answer(ollama_url: str, query: str, top_k: int, ollama_model: str):
         model=ollama_model,
         query=query,
         top_k=top_k,
+        min_score=MIN_SCORE,
     )
 
     click.echo("\nAnswer:\n")
     click.echo(answer)
 
-    click.echo("\nSources:\n")
-    for i, r in enumerate(results, start=1):
-        click.echo(f"{i}. {r['path']} (score={r['score']:.4f})")
+    if results:
+        click.echo("\nSources:\n")
+        for i, r in enumerate(results, start=1):
+            click.echo(f"{i}. {r['path']} (score={r['score']:.4f})")
 
 
 @cli.command()
