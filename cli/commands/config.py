@@ -11,6 +11,7 @@ DEFAULT_CONFIG = {
         "port": 6333,
         "collection": "documents",
         "top_k": 5,
+        "min_score": 0.35,
     },
     "ingestion": {
         "chunk_size": 1048576,
