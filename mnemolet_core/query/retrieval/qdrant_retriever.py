@@ -10,9 +10,7 @@ class QdrantRetriever:
         self.client = QdrantClient(qdrant_url)
         self.collection_name = collection_name
 
-    def search(
-        self, query: str, top_k: int = 5, min_score: float = 0.35
-    ) -> list[dict[str, Any]]:
+    def search(self, query: str, top_k: int = 5) -> list[dict[str, Any]]:
         query_vector = self.model.encode(query).tolist()
 
         results = self.client.query_points(
@@ -30,5 +28,4 @@ class QdrantRetriever:
                 "hash": i.payload.get("hash", ""),
             }
             for i in results.points
-            if i.score >= min_score
         ]
