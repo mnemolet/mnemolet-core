@@ -77,30 +77,6 @@ def stats(collection_name: str):
         raise HTTPException(status_code=500, detail=f"Failed to fetch stats:{str(e)}")
 
 
-@app.delete("/remove")
-def remove(collection_name: str):
-    """
-    Remove Qdrant collection.
-    """
-    try:
-        qm = QdrantManager(QDRANT_URL)
-        if not qm.collection_exists(collection_name):
-            raise HTTPException(
-                status_code=404, detail=f"Collection '{collection_name}' not found."
-            )
-
-        qm.remove_collection(collection_name)
-        return {
-            "status": "success",
-            "message": f"Collection '{collection_name}' removed successfully.",
-        }
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to remove collection '{collection_name}':{str(e)}",
-        )
-
-
 @app.get("/list-collections")
 def list_collections_cli():
     """
