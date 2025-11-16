@@ -22,6 +22,7 @@ def stream_files(dir: Path) -> Iterator[dict[str, str, str]]:
 
         try:
             for content_part in extractor.extract(file):
+                logger.warning(f"[LOADER] Received part: len={len(content_part)}")
                 data = {
                     "path": str(file.resolve()),
                     "content": content_part,

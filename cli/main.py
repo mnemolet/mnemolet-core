@@ -116,7 +116,12 @@ def ingest(ctx, directory: str, force: bool, batch_size: int):
     seen_files = set()
 
     if force:
-        first_chunk = next(process_directory(directory))
+        try:
+            first_chunk = next(process_directory(directory))
+        except StopIteration:
+            logger.warning("No chunks found to init collection.")
+            return
+
         first_embedding = next(embed_texts_batch([first_chunk["chunk"]], batch_size=1))
         embedding_dim = first_embedding.shape[1]
         logger.info(f"Recreating Qdrant collection (dim={embedding_dim})..")
