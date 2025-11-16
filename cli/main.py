@@ -16,7 +16,7 @@ from mnemolet_core.config import (
     QDRANT_URL,
     TOP_K,
 )
-from mnemolet_core.embeddings.local_llm_embed import embed_texts_batch
+from mnemolet_core.embeddings.local_llm_embed import embed_texts_batch, get_dimension
 from mnemolet_core.indexing.qdrant_indexer import QdrantIndexer
 from mnemolet_core.ingestion.preprocessor import process_directory
 from mnemolet_core.query.generation.generate_answer import generate_answer
@@ -104,7 +104,10 @@ def ingest(ctx, directory: str, force: bool, batch_size: int):
     logger.info(f"Starting ingestion from {directory}")
     db_tracker.init_db()
     indexer = QdrantIndexer(QDRANT_URL, QDRANT_COLLECTION)
-    embedding_dim = None
+    embedding_dim = get_dimension()
+    # runs only if there is no collection
+    indexer.ensure_collection(vector_size=embedding_dim)
+    # embedding_dim = None
     total_chunks = 0
     total_files = 0  # can be actually different with files count
 
@@ -116,14 +119,7 @@ def ingest(ctx, directory: str, force: bool, batch_size: int):
     seen_files = set()
 
     if force:
-        try:
-            first_chunk = next(process_directory(directory))
-        except StopIteration:
-            logger.warning("No chunks found to init collection.")
-            return
-
-        first_embedding = next(embed_texts_batch([first_chunk["chunk"]], batch_size=1))
-        embedding_dim = first_embedding.shape[1]
+        embedding_dim = get_dimension()
         logger.info(f"Recreating Qdrant collection (dim={embedding_dim})..")
         indexer.init_collection(vector_size=embedding_dim)
 
