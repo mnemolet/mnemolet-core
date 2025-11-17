@@ -3,6 +3,7 @@ from pathlib import Path
 
 from mnemolet_core.ingestion.preprocessor import process_directory
 from mnemolet_core.ingestion.utils import hash_file
+from mnemolet_core.storage.db_tracker import DBTracker
 
 
 def test_load_txt_files():
@@ -14,7 +15,8 @@ def test_load_txt_files():
         (tmp_path / "file2.txt").write_text("Another file", encoding="utf-8")
         (tmp_path / "empty.txt").write_text("", encoding="utf-8")
 
-        files = list(process_directory(tmp_path))
+        tracker = DBTracker()
+        files = list(process_directory(tmp_path, tracker, force=False))
 
         # skip empty files
         assert len(files) == 2

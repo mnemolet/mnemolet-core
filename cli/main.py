@@ -109,7 +109,6 @@ def ingest(ctx, directory: str, force: bool, batch_size: int):
     embedding_dim = get_dimension()
     # runs only if there is no collection
     indexer.ensure_collection(vector_size=embedding_dim)
-    # embedding_dim = None
     total_chunks = 0
     total_files = 0  # can be actually different with files count
 
@@ -125,23 +124,16 @@ def ingest(ctx, directory: str, force: bool, batch_size: int):
         logger.info(f"Recreating Qdrant collection (dim={embedding_dim})..")
         indexer.init_collection(vector_size=embedding_dim)
 
-    for data in process_directory(directory):
+    for data in process_directory(directory, tracker, force):
         file_path = data["path"]
         file_hash = data["hash"]
         chunk = data["chunk"]
-
-        # skip files already processed
-        if not force and tracker.file_exists(file_hash):
-            logger.info(f"Skipping already ingested: {file_path}")
-            continue
 
         if file_path not in seen_files:
             logger.info(f"Processing file #{total_files}: {file_path}")
             total_files += 1
             seen_files.add(file_path)
             pbar.update(1)  # increment progress bar
-
-        tracker.add_file(data["path"], data["hash"])
 
         # add to current batch
         chunk_batch.append(chunk)

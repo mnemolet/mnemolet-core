@@ -1,7 +1,12 @@
 import logging
+from pathlib import Path
+
+from mnemolet_core.storage.db_tracker import DBTracker
+
 from .loader import stream_files
 
 logger = logging.getLogger(__name__)
+
 
 def chunk_text(text: str, max_length: int = 3000) -> list[str]:
     """
@@ -11,11 +16,7 @@ def chunk_text(text: str, max_length: int = 3000) -> list[str]:
         text: input text
         max_length: chunk size in words
     """
-    # words = text.split()
     chunks = []
-    #for i in range(0, len(words), max_length):
-    #    chunk = " ".join(words[i : i + max_length])
-    #    chunks.append(chunk)
     text_len = len(text)
 
     logger.info(f"[CHUNK] Total text length: {text_len} chars")
@@ -30,8 +31,9 @@ def chunk_text(text: str, max_length: int = 3000) -> list[str]:
         chunks.append(chunk)
         chunk_count += 1
 
-        logger.debug(f"[CHUNK] Chunk #{chunk_count}: start={start},"
-                     f"end={min(end, text_len)}, length={len(chunk)}"
+        logger.debug(
+            f"[CHUNK] Chunk #{chunk_count}: start={start},"
+            f"end={min(end, text_len)}, length={len(chunk)}"
         )
 
         start = end
@@ -41,12 +43,11 @@ def chunk_text(text: str, max_length: int = 3000) -> list[str]:
     return chunks
 
 
-def process_directory(dir):
+def process_directory(dir: Path, tracker: DBTracker, force: bool):
     """
     Combine file streaming and chunking.
     """
-    for data in stream_files(dir):
-        # print(f"Size of data['content']: {len(data['content'])}")
+    for data in stream_files(dir, tracker, force):
         for chunk in chunk_text(data["content"], max_length=3000):
             yield {
                 "path": data["path"],

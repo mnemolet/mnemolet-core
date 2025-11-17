@@ -1,9 +1,12 @@
+import logging
 import sqlite3
-from pathlib import Path
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Optional
 
 from mnemolet_core.config import DB_PATH
+
+logger = logging.getLogger(__name__)
 
 CREATE_TABLE_FILES = """
 CREATE TABLE IF NOT EXISTS files (
@@ -14,6 +17,7 @@ CREATE TABLE IF NOT EXISTS files (
     indexed INTEGER DEFAULT 0
 );
 """
+
 
 class DBTracker:
     def __init__(self, db_path: Path = DB_PATH):
@@ -31,15 +35,13 @@ class DBTracker:
         conn.execute("PRAGMA foreign_keys=ON;")
         return conn
 
-
     def _create_tables(self):
         """
         Init SQLite db if it does not exist (only once).
         """
         with self._get_connection() as conn:
-            print("[DBTracker] Create Table Files")
+            logger.info("[DBTracker] Create Table Files")
             conn.execute(CREATE_TABLE_FILES)
-
 
     def add_file(self, path: str, file_hash: str):
         """
@@ -54,7 +56,6 @@ class DBTracker:
                 (path, file_hash, datetime.now(UTC).isoformat()),
             )
 
-
     def file_exists(self, file_hash: str) -> bool:
         """
         Check if file with this hash is already in db.
@@ -63,14 +64,12 @@ class DBTracker:
             curr = conn.execute("SELECT 1 FROM files WHERE hash = ?", (file_hash,))
             return curr.fetchone() is not None
 
-
     def mark_indexed(self, file_hash: str):
         """
         Mark file as indexed is Qdrant.
         """
         with self._get_connection() as conn:
             conn.execute("UPDATE files SET indexed = 1 WHERE hash = ?", (file_hash,))
-
 
     def list_files(self, indexed: Optional[bool] = None) -> list[dict]:
         """

@@ -49,6 +49,7 @@ def embed_texts_batch(
         ).astype(np.float32)
         yield embeddings
 
+
 def get_dimension() -> int:
     """
     Returns dimension for a specific model using dummy data.

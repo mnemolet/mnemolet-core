@@ -39,7 +39,6 @@ class QdrantIndexer:
         else:
             logger.info(f"Collection {self.collection_name} already exists.")
 
-
     def store_embeddings(
         self, chunks: list[str], embeddings: np.ndarray, metadata: list[dict[str, str]]
     ):

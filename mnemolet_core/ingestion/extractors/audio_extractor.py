@@ -9,10 +9,11 @@ from .base import Extractor
 
 logger = logging.getLogger(__name__)
 
+
 class AudioExtractor(Extractor):
     extensions = {".wav", ".mp3"}
 
-    def __init__(self, model_size="small", buffer_limit = 15000):
+    def __init__(self, model_size="small", buffer_limit=15000):
         super().__init__()  # init from base
 
         logger.info(f"[audio] Init Whisper model size='{model_size}'")
@@ -37,8 +38,7 @@ class AudioExtractor(Extractor):
         segments, info = self.pipeline.transcribe(str(file), batch_size=16)
 
         logger.info(
-                f"[audio] Language: {info.language}'"
-                f"[audio] Duration: {info.duration:.2f}s'"
+            f"[audio] Language: {info.language}'[audio] Duration: {info.duration:.2f}s'"
         )
 
         buffer = ""
@@ -48,12 +48,12 @@ class AudioExtractor(Extractor):
 
             if len(buffer) >= self.buffer_limit:
                 logger.warning(f"[audio] yielding buffer block: len={len(buffer)}")
-                logger.debug(buffer[:300]) # preview first 300 chars
+                logger.debug(buffer[:300])  # preview first 300 chars
                 yield buffer
                 buffer = ""
         if buffer:
             logger.warning(f"[audio] yielding FINALbuffer block: len={len(buffer)}")
-            logger.debug(buffer[:300]) # preview first 300 chars
+            logger.debug(buffer[:300])  # preview first 300 chars
             yield buffer
 
             """

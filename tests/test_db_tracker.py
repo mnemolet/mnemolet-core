@@ -1,13 +1,7 @@
 import os
 
-from mnemolet_core.storage.db_tracker import (
-    DB_PATH,
-    add_file,
-    file_exists,
-    init_db,
-    list_files,
-    mark_indexed,
-)
+from mnemolet_core.config import DB_PATH
+from mnemolet_core.storage.db_tracker import DBTracker
 
 
 def setup_module(module):
@@ -19,17 +13,17 @@ def setup_module(module):
 
 
 def test_add_and_list_files():
-    init_db()
+    tracker = DBTracker()
     path = "example.txt"
     file_hash = "example_hash"
 
-    add_file(path, file_hash)
-    assert file_exists(file_hash) is True
+    tracker.add_file(path, file_hash)
+    assert tracker.file_exists(file_hash) is True
 
-    files = list_files()
+    files = tracker.list_files()
     assert len(files) == 1
     assert files[0]["path"] == path
 
-    mark_indexed(file_hash)
-    indexed_files = list_files(indexed=True)
+    tracker.mark_indexed(file_hash)
+    indexed_files = tracker.list_files(indexed=True)
     assert len(indexed_files) == 1
