@@ -18,12 +18,26 @@ class QdrantIndexer:
 
     def init_collection(self, vector_size: int = 384):
         """
-        Create Qdrant collection.
+        Delete and recreate Qdrant collection.
         """
+        logger.info(f"Recreating Qdrant collection (dim={vector_size})..")
         self.client.recreate_collection(
             collection_name=self.collection_name,
             vectors_config=VectorParams(size=vector_size, distance=Distance.COSINE),
         )
+
+    def ensure_collection(self, vector_size: int = 384):
+        """
+        Create collection only if it does not exist.
+        """
+        if not self.client.collection_exists(self.collection_name):
+            logger.info(f"Creating Qdrant collection (dim={vector_size})..")
+            self.client.create_collection(
+                collection_name=self.collection_name,
+                vectors_config=VectorParams(size=vector_size, distance=Distance.COSINE),
+            )
+        else:
+            logger.info(f"Collection {self.collection_name} already exists.")
 
     def store_embeddings(
         self, chunks: list[str], embeddings: np.ndarray, metadata: list[dict[str, str]]

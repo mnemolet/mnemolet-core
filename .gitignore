@@ -209,8 +209,15 @@ __marimo__/
 # Qdrant local storage
 qdrant_storage/
 
-# Examples
-examples/
+# Test Examples
+test_ingestion_mix/
+test_ingestion_audio/
+test_ingestion_empty/
+test_ingestion_pdf/
+test_ingestion_txt/
+test_ingestion_doc/
+# test bash script to remove SQLite db and Qdrant collection, only for debugging
+remove.sh
 
 # embeddings
 embeddings.npy
