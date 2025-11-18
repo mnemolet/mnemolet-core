@@ -14,6 +14,7 @@ from mnemolet_core.config import (
     OLLAMA_URL,
     QDRANT_COLLECTION,
     QDRANT_URL,
+    SIZE_CHARS,
     TOP_K,
 )
 from mnemolet_core.embeddings.local_llm_embed import embed_texts_batch, get_dimension
@@ -124,7 +125,7 @@ def ingest(ctx, directory: str, force: bool, batch_size: int):
         logger.info(f"Recreating Qdrant collection (dim={embedding_dim})..")
         indexer.init_collection(vector_size=embedding_dim)
 
-    for data in process_directory(directory, tracker, force):
+    for data in process_directory(directory, tracker, force, SIZE_CHARS):
         file_path = data["path"]
         file_hash = data["hash"]
         chunk = data["chunk"]

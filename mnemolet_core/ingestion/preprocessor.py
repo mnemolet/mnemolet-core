@@ -43,12 +43,12 @@ def chunk_text(text: str, max_length: int = 3000) -> list[str]:
     return chunks
 
 
-def process_directory(dir: Path, tracker: DBTracker, force: bool):
+def process_directory(dir: Path, tracker: DBTracker, force: bool, max_length: int):
     """
     Combine file streaming and chunking.
     """
     for data in stream_files(dir, tracker, force):
-        for chunk in chunk_text(data["content"], max_length=3000):
+        for chunk in chunk_text(data["content"], max_length=max_length):
             yield {
                 "path": data["path"],
                 "chunk": chunk,

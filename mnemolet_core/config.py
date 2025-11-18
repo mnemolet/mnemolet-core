@@ -28,6 +28,7 @@ MIN_SCORE = float(os.getenv("MIN_SCORE", config["qdrant"].get("min_score", 0.35)
 CHUNK_SIZE = int(
     os.getenv("CHUNK_SIZE", config["ingestion"].get("chunk_size", 1048576))
 )
+SIZE_CHARS = int(os.getenv("SIZE_CHARS", config["ingestion"].get("size_chars", 3000)))
 
 EMBED_MODEL = os.getenv("EMBED_MODEL", config["embedding"]["model"])
 EMBED_BATCH = int(os.getenv("EMBED_BATCH", config["embedding"].get("batch_size", 100)))

@@ -16,7 +16,7 @@ def test_load_txt_files():
         (tmp_path / "empty.txt").write_text("", encoding="utf-8")
 
         tracker = DBTracker()
-        files = list(process_directory(tmp_path, tracker, force=False))
+        files = list(process_directory(tmp_path, tracker, force=False, max_length=3000))
 
         # skip empty files
         assert len(files) == 2

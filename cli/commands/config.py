@@ -15,6 +15,7 @@ DEFAULT_CONFIG = {
     },
     "ingestion": {
         "chunk_size": 1048576,
+        "size_chars": 3000,
     },
     "embedding": {
         "model": "all-MiniLM-L6-v2",
