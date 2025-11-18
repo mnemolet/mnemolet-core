@@ -7,6 +7,7 @@ min_score = 0.35
 
 [ingestion]
 chunk_size = 1048576 # 1Mb
+size_chars = 3000
 
 [embedding]
 model = "all-MiniLM-L6-v2"

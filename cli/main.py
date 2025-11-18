@@ -14,6 +14,7 @@ from mnemolet_core.config import (
     OLLAMA_URL,
     QDRANT_COLLECTION,
     QDRANT_URL,
+    SIZE_CHARS,
     TOP_K,
 )
 from mnemolet_core.embeddings.local_llm_embed import embed_texts_batch, get_dimension
@@ -124,7 +125,7 @@ def ingest(ctx, directory: str, force: bool, batch_size: int):
         logger.info(f"Recreating Qdrant collection (dim={embedding_dim})..")
         indexer.init_collection(vector_size=embedding_dim)
 
-    for data in process_directory(directory, tracker, force):
+    for data in process_directory(directory, tracker, force, SIZE_CHARS):
         file_path = data["path"]
         file_hash = data["hash"]
         chunk = data["chunk"]
@@ -172,8 +173,11 @@ def _store_batch(indexer, chunk_batch, metadata_batch, embedding_dim, force):
 @click.option(
     "--top-k", default=TOP_K, show_default=True, help="Number of results to retrieve."
 )
+@click.option(
+    "--min-score", default=MIN_SCORE, show_default=True, help="Minimum score threshold."
+)
 @requires_qdrant
-def search(query: str, top_k: int):
+def search(query: str, top_k: int, min_score: float):
     """
     Search Qdrant for relevant documents.
     """
@@ -185,7 +189,7 @@ def search(query: str, top_k: int):
         top_k=top_k,
     )
 
-    filtered_results = filter_by_min_score(results, MIN_SCORE)
+    filtered_results = filter_by_min_score(results, min_score)
 
     if not filtered_results:
         click.echo("No results found.")
@@ -218,8 +222,13 @@ def search(query: str, top_k: int):
     show_default=True,
     help="Local model to use for generation.",
 )
+@click.option(
+    "--min-score", default=MIN_SCORE, show_default=True, help="Minimum score threshold."
+)
 @requires_qdrant
-def answer(ollama_url: str, query: str, top_k: int, ollama_model: str):
+def answer(
+    ollama_url: str, query: str, top_k: int, ollama_model: str, min_score: float
+):
     """
     Search Qdrant and generate an answer using local LLM.
     """
@@ -232,7 +241,7 @@ def answer(ollama_url: str, query: str, top_k: int, ollama_model: str):
         model=ollama_model,
         query=query,
         top_k=top_k,
-        min_score=MIN_SCORE,
+        min_score=min_score,
     )
 
     click.echo("\nAnswer:\n")
