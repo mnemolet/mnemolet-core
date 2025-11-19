@@ -48,6 +48,10 @@ def requires_qdrant(f):
 @click.option(
     "-v", "--verbose", count=True, help="Increase output verbosity (use -v or -vv)"
 )
+@click.version_option(
+    version="0.0.1",
+    prog_name="MnemoLet",
+)
 @click.pass_context
 def cli(ctx, verbose):
     """
