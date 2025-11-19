@@ -1,6 +1,7 @@
 import logging
 import sys
 import time
+import tomllib
 from functools import wraps
 from pathlib import Path
 
@@ -28,6 +29,11 @@ from mnemolet_core.utils.utils import filter_by_min_score
 
 logger = logging.getLogger(__name__)
 
+pyproject_file = Path(__file__).parent.parent / "pyproject.toml"
+with pyproject_file.open("rb") as f:
+    pyproject_data = tomllib.load(f)
+__version__ = pyproject_data["project"]["version"]
+
 
 def requires_qdrant(f):
     """
@@ -49,7 +55,7 @@ def requires_qdrant(f):
     "-v", "--verbose", count=True, help="Increase output verbosity (use -v or -vv)"
 )
 @click.version_option(
-    version="0.0.1",
+    version=__version__,
     prog_name="MnemoLet",
 )
 @click.pass_context
