@@ -1,8 +1,8 @@
 from pathlib import Path
 from typing import Iterator
 
-from mnemolet_core.core.ingestion.loaders.pdf_loader import extract_pdf
 from mnemolet_core.core.ingestion.extractors.base import Extractor
+from mnemolet_core.core.ingestion.loaders.pdf_loader import extract_pdf
 
 
 class PDFExtractor(Extractor):

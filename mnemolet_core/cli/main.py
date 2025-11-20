@@ -18,7 +18,10 @@ from mnemolet_core.config import (
     SIZE_CHARS,
     TOP_K,
 )
-from mnemolet_core.core.embeddings.local_llm_embed import embed_texts_batch, get_dimension
+from mnemolet_core.core.embeddings.local_llm_embed import (
+    embed_texts_batch,
+    get_dimension,
+)
 from mnemolet_core.core.indexing.qdrant_indexer import QdrantIndexer
 from mnemolet_core.core.ingestion.preprocessor import process_directory
 from mnemolet_core.core.query.generation.generate_answer import generate_answer

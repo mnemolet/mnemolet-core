@@ -1,8 +1,8 @@
 from pathlib import Path
 from typing import Iterator
 
-from mnemolet_core.core.ingestion.loaders.odt_loader import extract_odt
 from mnemolet_core.core.ingestion.extractors.base import Extractor
+from mnemolet_core.core.ingestion.loaders.odt_loader import extract_odt
 
 
 class OdtExtractor(Extractor):
