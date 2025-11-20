@@ -1,9 +1,9 @@
 import logging
 
-from mnemolet_core.utils.utils import filter_by_min_score
+from mnemolet_core.core.utils.utils import filter_by_min_score
 
-from ..retrieval.search_documents import search_documents
-from .local_generator import LocalGenerator
+from mnemolet_core.core.query.retrieval.search_documents import search_documents
+from mnemolet_core.core.query.generation.local_generator import LocalGenerator
 
 logger = logging.getLogger(__name__)
 

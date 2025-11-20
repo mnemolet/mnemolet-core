@@ -2,10 +2,10 @@ import logging
 from collections.abc import Iterator
 from pathlib import Path
 
-from mnemolet_core.storage.db_tracker import DBTracker
+from mnemolet_core.core.storage.db_tracker import DBTracker
 
-from .extractors.registry import get_extractor
-from .utils import hash_file
+from mnemolet_core.core.ingestion.extractors.registry import get_extractor
+from mnemolet_core.core.ingestion.utils import hash_file
 
 logger = logging.getLogger(__name__)
 

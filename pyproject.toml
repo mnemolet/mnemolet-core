@@ -5,7 +5,7 @@ select = ["E", "F", "I"]
 [project]
 name = "mnemolet-core"
 version = "0.1.0"
-description = "Add your description here"
+description = "MnemoLet minimal RAG system"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
@@ -22,6 +22,9 @@ dependencies = [
     "torch>=2.8.0",
     "tqdm>=4.67.1",
 ]
+
+[project.scripts]
+mnemolet = "mnemolet_core.cli.main:cli"
 
 [dependency-groups]
 dev = [

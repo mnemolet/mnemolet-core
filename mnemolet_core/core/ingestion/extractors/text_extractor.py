@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Iterator
 
-from .base import Extractor
+from mnemolet_core.core.ingestion.extractors.base import Extractor
 
 
 class TextExtractor(Extractor):
