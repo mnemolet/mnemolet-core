@@ -44,14 +44,31 @@ MnemoLet requires Python and [uv](https://uv.run/) for managing virtual environm
 
 1. **clone the repo**:
 
-2. **install uv**
+`git clone https://github.com/mnemolet/mnemolet-core.git`
 
-3. **create virtual environment and install dependencies**
+2. **create virtual environment**
 
-```
-$ uv init
-$ uv sync
-```
+`uv init`
+
+3. **activate virtual environment**
+
+`source .venv/bin/activate`
+
+on Windows: `.\venv\Scripts\activate`
+
+4. **install the project in editable mode**
+
+`uv pip install -e .`
+
+5. **verify installation**
+
+`mnemolet --version`
+
+`mnemolet --help`
+
+6. [optional] **install dev dependencies**
+
+`uv sync`
 
 ## Configuration
 
@@ -82,31 +99,77 @@ db_path = "./data/tracker.sqlite"
 
 **Note:** Before using the CLI or API, make sure the Qdrant server is running.
 
+### Version
+
+`mnemolet --version`
+
+or
+
+`uv run python -m mnemolet_core.cli.main --version`
+
 ### Help
 
-`uv run python -m cli.main --help`
+`mnemolet --help`
+
+or
+
+`uv run python -m mnemolet_core.cli.main --help`
 
 ### Ingest Files
 
-`uv run python -m cli.main ingest <directory>`
+`mnemolet ingest <directory>`
+
+or
+
+`uv run python -m mnemolet_core.cli.main ingest <directory>`
 
 or
 
 add `--force` to re-ingest files and recreate Qdrant collection
 
-`uv run python -m cli.main ingest <directory> --force`
+`uv run python -m mnemolet_core.cli.main ingest <directory> --force`
+
+`-v` - optional verbosity flag (can be repeated as -vv for debug mode)
+
+#### Example:
+
+`mnemolet -v ingest /path/to/docs`
 
 ### Search in Qdrant Collection
 
-`uv run python -m cli.main search "<query>" --top-k <number of results>`
+`mnemolet search "<query>"`
 
-`--top-k`: [optional]
+or
+
+`uv run python -m mnemolet_core.cli.main search "<query>"`
+
+- `--top-k <INT>` - optional number of results to retrieve
+
+- `--min-score <FLOAT>` - optional minimum score threshold [default: 0.35]
+
+#### Example:
+
+`mnemolet search "example" --top-k 5 --min-score 0.2`
 
 ### Generate Answer
 
-`uv run python -m cli.main answer "<query>" --top-k <number of results>`
+`mnemolet answer "<query>"`
 
-`--top-k`: [optional]
+or
+
+`uv run python -m mnemolet_core.cli.main answer "<query>"`
+
+- `--top-k <INT>` - optional number of results to retrieve
+
+- `--min-score <FLOAT>` - optional minimum score threshold [default: 0.35]
+
+- `--ollama-url <STR>` - optional Ollama url [default: http://localhost:11434]
+
+- `--ollama-model <STR>` - optional local model to use for generation [default: llama3]
+
+#### Example:
+
+`mnemolet answer "example" --top-k 5 --min-score 0.2`
 
 ## API
 
