@@ -1,6 +1,6 @@
 import numpy as np
 
-from mnemolet_core.embeddings.local_llm_embed import embed_texts_batch
+from mnemolet_core.core.embeddings.local_llm_embed import embed_texts_batch
 
 
 def test_embed_texts_batch_basic():

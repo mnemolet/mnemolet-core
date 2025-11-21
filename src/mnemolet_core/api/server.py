@@ -9,9 +9,9 @@ from mnemolet_core.config import (
     QDRANT_URL,
     TOP_K,
 )
-from mnemolet_core.query.generation.generate_answer import generate_answer
-from mnemolet_core.query.retrieval.search_documents import search_documents
-from mnemolet_core.utils.qdrant import QdrantManager
+from mnemolet_core.core.query.generation.generate_answer import generate_answer
+from mnemolet_core.core.query.retrieval.search_documents import search_documents
+from mnemolet_core.core.utils.qdrant import QdrantManager
 
 app = FastAPI(title="MnemoLet API", version="0.0.1")
 

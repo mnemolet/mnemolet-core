@@ -3,9 +3,10 @@ import logging
 import pkgutil
 from pathlib import Path
 
+from mnemolet_core.core.ingestion.extractors.base import Extractor
+
 from . import __name__ as pkg_name
 from . import __path__
-from .base import Extractor
 
 logger = logging.getLogger(__name__)
 

@@ -1,9 +1,8 @@
 import logging
 from pathlib import Path
 
-from mnemolet_core.storage.db_tracker import DBTracker
-
-from .loader import stream_files
+from mnemolet_core.core.ingestion.loader import stream_files
+from mnemolet_core.core.storage.db_tracker import DBTracker
 
 logger = logging.getLogger(__name__)
 

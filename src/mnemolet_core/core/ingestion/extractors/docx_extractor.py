@@ -1,8 +1,8 @@
 from pathlib import Path
 from typing import Iterator
 
-from ..loaders.docx_loader import extract_docx
-from .base import Extractor
+from mnemolet_core.core.ingestion.extractors.base import Extractor
+from mnemolet_core.core.ingestion.loaders.docx_loader import extract_docx
 
 
 class DocxExtractor(Extractor):

@@ -1,14 +1,14 @@
 import logging
 import sys
 import time
-import tomllib
 from functools import wraps
+from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 
 import click
 from tqdm import tqdm
 
-from cli.commands.config import init_config
+from mnemolet_core.cli.commands.config import init_config
 from mnemolet_core.config import (
     EMBED_MODEL,
     MIN_SCORE,
@@ -18,22 +18,24 @@ from mnemolet_core.config import (
     SIZE_CHARS,
     TOP_K,
 )
-from mnemolet_core.embeddings.local_llm_embed import embed_texts_batch, get_dimension
-from mnemolet_core.indexing.qdrant_indexer import QdrantIndexer
-from mnemolet_core.ingestion.preprocessor import process_directory
-from mnemolet_core.query.generation.generate_answer import generate_answer
-from mnemolet_core.query.retrieval.search_documents import search_documents
-from mnemolet_core.storage.db_tracker import DBTracker
-from mnemolet_core.utils.qdrant import QdrantManager
-from mnemolet_core.utils.utils import filter_by_min_score
+from mnemolet_core.core.embeddings.local_llm_embed import (
+    embed_texts_batch,
+    get_dimension,
+)
+from mnemolet_core.core.indexing.qdrant_indexer import QdrantIndexer
+from mnemolet_core.core.ingestion.preprocessor import process_directory
+from mnemolet_core.core.query.generation.generate_answer import generate_answer
+from mnemolet_core.core.query.retrieval.search_documents import search_documents
+from mnemolet_core.core.storage.db_tracker import DBTracker
+from mnemolet_core.core.utils.qdrant import QdrantManager
+from mnemolet_core.core.utils.utils import filter_by_min_score
 
 logger = logging.getLogger(__name__)
 
-pyproject_file = Path(__file__).parent.parent / "pyproject.toml"
-with pyproject_file.open("rb") as f:
-    pyproject_data = tomllib.load(f)
-__version__ = pyproject_data["project"]["version"]
-
+try:
+    __version__ = version("mnemolet_core")
+except PackageNotFoundError:
+    __version__ = "0.1.0"
 
 def requires_qdrant(f):
     """
