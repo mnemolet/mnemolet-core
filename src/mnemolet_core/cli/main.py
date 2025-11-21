@@ -32,7 +32,7 @@ from mnemolet_core.core.utils.utils import filter_by_min_score
 
 logger = logging.getLogger(__name__)
 
-pyproject_file = Path(__file__).parent.parent.parent / "pyproject.toml"
+pyproject_file = Path(__file__).parent.parents[2] / "pyproject.toml"
 with pyproject_file.open("rb") as f:
     pyproject_data = tomllib.load(f)
 __version__ = pyproject_data["project"]["version"]

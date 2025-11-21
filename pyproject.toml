@@ -2,6 +2,10 @@
 # enable isort rules
 select = ["E", "F", "I"]
 
+[build-system]
+requires = ["setuptools >= 77.0.3"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "mnemolet-core"
 version = "0.1.0"
