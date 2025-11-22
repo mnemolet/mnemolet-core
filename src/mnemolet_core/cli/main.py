@@ -70,22 +70,30 @@ def cli(ctx, verbose):
     logger.debug(f"Logger init with level={level}")
 
 
-def register_commands():
-    from mnemolet_core.cli.commands.answer import answer
-    from mnemolet_core.cli.commands.config import init_config
-    from mnemolet_core.cli.commands.ingest import ingest
-    from mnemolet_core.cli.commands.list import list_collections_cli
-    from mnemolet_core.cli.commands.remove import remove
-    from mnemolet_core.cli.commands.search import search
-    from mnemolet_core.cli.commands.stats import stats
+def lazy_import(module: str, name: str):
+    """
+    Return a click command that imports its implementation only on execution.
+    """
 
-    cli.add_command(init_config)
-    cli.add_command(ingest)
-    cli.add_command(search)
-    cli.add_command(answer)
-    cli.add_command(stats)
-    cli.add_command(list_collections_cli)
-    cli.add_command(remove)
+    def _wrapper(*args, **kwargs):
+        mod = __import__(module, fromlist=[name])
+        return getattr(mod, name)(*args, **kwargs)
+
+    return click.Command(name, callback=_wrapper)
+
+
+def register_commands():
+    cli.add_command(
+        lazy_import("mnemolet_core.cli.commands.config.init_config", "init_config")
+    )
+    cli.add_command(lazy_import("mnemolet_core.cli.commands.ingest", "ingest"))
+    cli.add_command(lazy_import("mnemolet_core.cli.commands.search", "search"))
+    cli.add_command(lazy_import("mnemolet_core.cli.commands.answer", "answer"))
+    cli.add_command(lazy_import("mnemolet_core.cli.commands.stats", "stats"))
+    cli.add_command(
+        lazy_import("mnemolet_core.cli.commands.list", "list_collections_cli")
+    )
+    cli.add_command(lazy_import("mnemolet_core.cli.commands.remove", "remove"))
 
 
 register_commands()
