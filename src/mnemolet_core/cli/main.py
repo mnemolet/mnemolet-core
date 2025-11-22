@@ -75,25 +75,31 @@ def lazy_import(module: str, name: str):
     Return a click command that imports its implementation only on execution.
     """
 
-    def _wrapper(*args, **kwargs):
-        mod = __import__(module, fromlist=[name])
-        return getattr(mod, name)(*args, **kwargs)
+    logger.debug(f"[lazy_import] preparing to load {module}:{name}")
 
-    return click.Command(name, callback=_wrapper)
+    def _wrapper(*args, **kwargs):
+        logger.debug(f"[lazy_import] importing module {module}")
+        mod = __import__(module, fromlist=[name])
+
+        logger.debug(f"[lazy_import] accessing attribute {name}")
+        return getattr(mod, name)
+
+    cmd = _wrapper()
+
+    return cmd
 
 
 def register_commands():
-    cli.add_command(
-        lazy_import("mnemolet_core.cli.commands.config.init_config", "init_config")
-    )
+    cli.add_command(lazy_import("mnemolet_core.cli.commands.config", "init_config"))
     cli.add_command(lazy_import("mnemolet_core.cli.commands.ingest", "ingest"))
     cli.add_command(lazy_import("mnemolet_core.cli.commands.search", "search"))
     cli.add_command(lazy_import("mnemolet_core.cli.commands.answer", "answer"))
     cli.add_command(lazy_import("mnemolet_core.cli.commands.stats", "stats"))
     cli.add_command(
-        lazy_import("mnemolet_core.cli.commands.list", "list_collections_cli")
+        lazy_import("mnemolet_core.cli.commands.list", "list_collections")
     )
     cli.add_command(lazy_import("mnemolet_core.cli.commands.remove", "remove"))
+    cli.add_command(lazy_import("mnemolet_core.cli.commands.serve", "serve"))
 
 
 register_commands()

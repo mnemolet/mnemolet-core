@@ -10,7 +10,7 @@ from .utils import requires_qdrant
 
 @click.command()
 @requires_qdrant
-def list_collections_cli():
+def list_collections():
     """
     List all Qdrant collections.
     """
