@@ -3,7 +3,6 @@ from datetime import datetime
 from pathlib import Path
 
 import click
-import tomli_w
 
 DEFAULT_CONFIG = {
     "qdrant": {
@@ -40,6 +39,8 @@ def init_config(path: str, force: bool):
     """
     Generate a default config.toml file.
     """
+    import tomli_w
+
     config_path = Path(path)
 
     if config_path.exists() and not force:
