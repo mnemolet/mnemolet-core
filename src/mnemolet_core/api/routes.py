@@ -61,20 +61,39 @@ def answer(
     ollama_model: str = OLLAMA_MODEL,
     top_k: int = TOP_K,
 ):
+    return get_answer(
+        query, qdrant_url, collection_name, embed_model, ollama_url, ollama_model, top_k
+    )
+
+
+def get_answer(
+    query: str,
+    qdrant_url: str = QDRANT_URL,
+    collection_name: str = QDRANT_COLLECTION,
+    embed_model: str = EMBED_MODEL,
+    ollama_url: str = OLLAMA_URL,
+    ollama_model: str = OLLAMA_MODEL,
+    top_k: int = TOP_K,
+):
     """
     Generate answer from local LLM.
     """
-    answer, _ = generate_answer(
-        qdrant_url=QDRANT_URL,
-        collection_name=QDRANT_COLLECTION,
-        embed_model=EMBED_MODEL,
-        ollama_url=OLLAMA_URL,
-        model=ollama_model,
-        query=query,
-        top_k=top_k,
-        min_score=MIN_SCORE,
-    )
-    return {"response": answer}
+    try:
+        answer, _ = generate_answer(
+            qdrant_url=QDRANT_URL,
+            collection_name=QDRANT_COLLECTION,
+            embed_model=EMBED_MODEL,
+            ollama_url=OLLAMA_URL,
+            model=ollama_model,
+            query=query,
+            top_k=top_k,
+            min_score=MIN_SCORE,
+        )
+        return {"response": answer}
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Generating answer failed: {str(e)}"
+        )
 
 
 @api_router.get("/stats")

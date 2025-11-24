@@ -2,7 +2,7 @@ from fastapi import APIRouter, Form, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
-from mnemolet_core.api.routes import do_search, get_collections, get_stats
+from mnemolet_core.api.routes import do_search, get_answer, get_collections, get_stats
 
 ui_router = APIRouter()
 
@@ -58,4 +58,20 @@ async def search_ui_post(request: Request, query: str = Form(...)):
     return templates.TemplateResponse(
         "search.html",
         {"request": request, "results": data.get("results", []), "query": query},
+    )
+
+
+@ui_router.get("/answer", response_class=HTMLResponse)
+async def answer_ui(request: Request):
+    return templates.TemplateResponse(
+        "answer.html", {"request": request, "results": None}
+    )
+
+
+@ui_router.post("/answer", response_class=HTMLResponse)
+async def answer_ui_post(request: Request, query: str = Form(...)):
+    data = get_answer(query)
+    return templates.TemplateResponse(
+        "answer.html",
+        {"request": request, "response": data.get("response"), "query": query},
     )
