@@ -22,6 +22,7 @@ class QdrantRetriever:
 
         return [
             {
+                "id": i.id,
                 "text": i.payload.get("text", ""),
                 "score": i.score,
                 "path": i.payload.get("path", ""),

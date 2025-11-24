@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        {% include "head.html" %}
+    </head>
+    <body>
+
+    {% include "nav.html" %}
+
+    <main class="container mx-auto px-4">
+        {% block content %}{% endblock %}
+    </main>
+
+    {% include "footer.html" %}
+    </body>
+</html>

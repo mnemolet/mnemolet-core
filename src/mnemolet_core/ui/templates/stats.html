@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Stats - MnemoLet{% endblock%}
+
+{% block content %}
+    <h2 class="text-3xl font-bold mb-4 text-gray-800">Statistics for "{{ collection_name }}"</h2>
+
+    {% if stats %}
+    <table class="table-auto border-collapse border border-gray-300 w-full bg-white">
+        <thead>
+            <tr>
+                <th class="border border-gray-300 px-4 py-2">Field</th>
+                <th class="border border-gray-300 px-4 py-2">Value</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for key, value in stats.items() %}
+            <tr>
+                <td class="border border-gray-300 px-4 py-2">{{ key }}</td>
+                <td class="border border-gray-300 px-4 py-2">{{ value }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="text-gray-600">No statistics available for this collection.</p>
+    {% endif %}
+{% endblock %}

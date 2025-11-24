@@ -28,14 +28,27 @@ def search(
     """
     Search documents in Qdrant.
     """
-    results = search_documents(
-        qdrant_url=QDRANT_URL,
-        collection_name=QDRANT_COLLECTION,
-        embed_model=EMBED_MODEL,
-        query=query,
-        top_k=top_k,
-    )
-    return {"results": results}
+    return do_search(query, qdrant_url, collection_name, embed_model, top_k)
+
+
+def do_search(
+    query: str,
+    qdrant_url: str = QDRANT_URL,
+    collection_name: str = QDRANT_COLLECTION,
+    embed_model: str = EMBED_MODEL,
+    top_k: int = TOP_K,
+):
+    try:
+        results = search_documents(
+            qdrant_url=QDRANT_URL,
+            collection_name=QDRANT_COLLECTION,
+            embed_model=EMBED_MODEL,
+            query=query,
+            top_k=top_k,
+        )
+        return {"results": results}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}")
 
 
 @api_router.get("/answer")
@@ -66,10 +79,13 @@ def answer(
 
 @api_router.get("/stats")
 def stats(collection_name: str):
+    return get_stats(collection_name)
+
+
+def get_stats(collection_name: str):
     """
     Output statistics about Qdrant database.
     """
-    print("test")
     try:
         qm = QdrantManager(QDRANT_URL)
         stats = qm.get_collection_stats(collection_name)
@@ -79,7 +95,11 @@ def stats(collection_name: str):
 
 
 @api_router.get("/list-collections")
-def list_collections_cli():
+def list_collections():
+    return get_collections()
+
+
+def get_collections():
     """
     List all Qdrant collections.
     """

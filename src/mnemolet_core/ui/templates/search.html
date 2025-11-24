@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Search - MnemoLet{% endblock%}
+
+{% block content %}
+    <h2 class="text-3xl font-bold mb-4 text-gray-800">Search Documents</h2>
+
+    <form method="post" class="mb-6">
+    <input
+        type="text"
+        name="query"
+        value="{{ query | default('') }}"
+        placeholder="Enter your search query..."
+        class="border border-gray-300 rounded px-4 py-2 w-full max-w-lg"
+        required
+    />
+    <button
+        type="submit"
+        class="ml-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+    >
+        Search
+    </button>
+    </form>
+
+    {% if results is not none %}
+        {% if results %}
+            <table class="table-auto border-collapse border border-gray-300 w-full bg-white">
+                <thead>
+                    <tr>
+                        <th class="border border-gray-300 px-4 py-2">Id</th>
+                        <th class="border border-gray-300 px-4 py-2">Source</th>
+                        <th class="border border-gray-300 px-4 py-2">Score</th>
+                        <th class="border border-gray-300 px-4 py-2">Content</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in results %}
+                    <tr>
+                        <td class="border border-gray-300 px-4 py-2">{{ item.id }}</td>
+                        <td class="border border-gray-300 px-4 py-2">{{ item.path }}</td>
+                        <td class="border border-gray-300 px-4 py-2">{{ item.score }}</td>
+                        <td class="border border-gray-300 px-4 py-2">{{ item.text }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="text-gray-600">No results found.</p>
+        {% endif %}
+    {% endif %}
+{% endblock %}
