@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import APIRouter, FastAPI, HTTPException
 
 from mnemolet_core.config import (
     EMBED_MODEL,
@@ -14,9 +14,10 @@ from mnemolet_core.core.query.retrieval.search_documents import search_documents
 from mnemolet_core.core.utils.qdrant import QdrantManager
 
 app = FastAPI(title="MnemoLet API", version="0.0.1")
+api_router = APIRouter()
 
 
-@app.get("/search")
+@api_router.get("/search")
 def search(
     query: str,
     qdrant_url: str = QDRANT_URL,
@@ -37,7 +38,7 @@ def search(
     return {"results": results}
 
 
-@app.get("/answer")
+@api_router.get("/answer")
 def answer(
     query: str,
     qdrant_url: str = QDRANT_URL,
@@ -63,7 +64,7 @@ def answer(
     return {"response": answer}
 
 
-@app.get("/stats")
+@api_router.get("/stats")
 def stats(collection_name: str):
     """
     Output statistics about Qdrant database.
@@ -77,7 +78,7 @@ def stats(collection_name: str):
         raise HTTPException(status_code=500, detail=f"Failed to fetch stats:{str(e)}")
 
 
-@app.get("/list-collections")
+@api_router.get("/list-collections")
 def list_collections_cli():
     """
     List all Qdrant collections.
