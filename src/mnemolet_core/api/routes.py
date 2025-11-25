@@ -79,7 +79,7 @@ def get_answer(
     Generate answer from local LLM.
     """
     try:
-        answer, _ = generate_answer(
+        answer, sources = generate_answer(
             qdrant_url=QDRANT_URL,
             collection_name=QDRANT_COLLECTION,
             embed_model=EMBED_MODEL,
@@ -89,7 +89,7 @@ def get_answer(
             top_k=top_k,
             min_score=MIN_SCORE,
         )
-        return {"response": answer}
+        return {"answer": answer, "sources": sources}
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Generating answer failed: {str(e)}"

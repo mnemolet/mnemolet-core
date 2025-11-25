@@ -73,5 +73,10 @@ async def answer_ui_post(request: Request, query: str = Form(...)):
     data = get_answer(query)
     return templates.TemplateResponse(
         "answer.html",
-        {"request": request, "response": data.get("response"), "query": query},
+        {
+            "request": request,
+            "answer": data.get("answer"),
+            "sources": data.get("sources", []),
+            "query": query,
+        },
     )
