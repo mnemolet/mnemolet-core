@@ -1,4 +1,4 @@
-from fastapi import APIRouter, FastAPI, HTTPException
+from fastapi import APIRouter, FastAPI, File, HTTPException, UploadFile
 
 from mnemolet_core.config import (
     EMBED_MODEL,
@@ -8,6 +8,7 @@ from mnemolet_core.config import (
     QDRANT_COLLECTION,
     QDRANT_URL,
     TOP_K,
+    UPLOAD_DIR,
 )
 from mnemolet_core.core.query.generation.generate_answer import generate_answer
 from mnemolet_core.core.query.retrieval.search_documents import search_documents
@@ -15,6 +16,26 @@ from mnemolet_core.core.utils.qdrant import QdrantManager
 
 app = FastAPI(title="MnemoLet API", version="0.0.1")
 api_router = APIRouter()
+
+
+@api_router.post("/ingest")
+async def ingest_files(files: list[UploadFile] = File(...)):
+    """
+    Ingest multiple files into Qdrant.
+    """
+    saved_files = []
+
+    for f in files:
+        dest = UPLOAD_DIR / f.filename
+
+        content = await f.read()
+        dest.write_bytes(content)
+
+        saved_files.append(str(dest))
+
+    # TODO: run_ingestion_on_directory(UPLOAD_DIR)
+
+    return {"status": "ok", "uploaded": saved_files, "message": "Ingestion complete"}
 
 
 @api_router.get("/search")

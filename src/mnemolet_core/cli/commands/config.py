@@ -23,6 +23,7 @@ DEFAULT_CONFIG = {
     "ollama": {"host": "localhost", "port": 11434, "model": "llama3"},
     "storage": {
         "db_path": "./data/tracker.sqlite",
+        "upload_dir": "./data/uploads",
     },
 }
 
