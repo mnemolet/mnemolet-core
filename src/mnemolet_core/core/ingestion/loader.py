@@ -33,7 +33,7 @@ def stream_files(
 
         # Skip duplicates within current batch
         if file_hash in seen_hashes:
-            logger.into(f"Skipping duplicate file in directory: {file_path}")
+            logger.info(f"Skipping duplicate file in directory: {file_path}")
             continue
 
         seen_hashes.add(file_hash)
@@ -43,7 +43,7 @@ def stream_files(
             resolved_path = str(file_path.resolve())
 
             for content_part in extractor.extract(file_path):
-                logger.warning(f"[LOADER] Received part: len={len(content_part)}")
+                logger.debug(f"[LOADER] Received part: len={len(content_part)}")
 
                 if not file_added:
                     tracker.add_file(resolved_path, file_hash)
