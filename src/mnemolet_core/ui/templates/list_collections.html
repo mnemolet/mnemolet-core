@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}Collections - MnemoLet{% endblock%}
+
+{% block content %}
+    <h2 class="text-3xl font-bold mb-4 text-gray-800">List of collections</h1>
+    
+    {% if collections %}
+    <table class="table-auto border-collapse border border-gray-300 w-full bg-white">
+        <tr>
+            <th class="border border-gray-300 px-4 py-2">Name</th>
+        </tr>
+        {% for item in collections %}
+        <tr>
+            <td class="border border-gray-300 px-4 py-2">{{ item }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% else %}
+    <p class="text-gray-600">No collections found.</p>
+    {% endif %}
+{% endblock %}

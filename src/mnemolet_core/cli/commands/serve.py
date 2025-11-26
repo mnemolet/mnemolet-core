@@ -6,7 +6,11 @@ import click
     "--host", default="127.0.0.1", show_default=True, help="Host to bind server to."
 )
 @click.option(
-    "--port", default="8000", show_default=True, help="Port the server should run on."
+    "--port",
+    default=8000,
+    type=int,
+    show_default=True,
+    help="Port the server should run on.",
 )
 @click.option("--reload", is_flag=True, help="Enable auto-reload (for dev).")
 def serve(host: str, port: int, reload: bool):
@@ -18,7 +22,7 @@ def serve(host: str, port: int, reload: bool):
     click.echo(f"Staring API server on http://{host}:{port} (reload={reload})")
 
     uvicorn.run(
-        "mnemolet_core.api.server:app",
+        "mnemolet_core.app:app",
         host=host,
         port=port,
         reload=reload,

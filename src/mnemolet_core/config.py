@@ -39,3 +39,6 @@ OLLAMA_URL = f"http://{OLLAMA_HOST}:{OLLAMA_PORT}"
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", config["ollama"]["model"])
 
 DB_PATH = Path(os.path.expanduser(config["storage"]["db_path"]))
+
+UPLOAD_DIR = Path(config["storage"]["upload_dir"])
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
