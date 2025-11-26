@@ -1,4 +1,4 @@
-from fastapi import APIRouter, FastAPI, File, HTTPException, UploadFile
+from fastapi import APIRouter, FastAPI, File, HTTPException, Query, UploadFile
 
 from mnemolet_core.config import (
     EMBED_MODEL,
@@ -7,11 +7,10 @@ from mnemolet_core.config import (
     OLLAMA_URL,
     QDRANT_COLLECTION,
     QDRANT_URL,
+    SIZE_CHARS,
     TOP_K,
     UPLOAD_DIR,
 )
-from mnemolet_core.core.query.generation.generate_answer import generate_answer
-from mnemolet_core.core.query.retrieval.search_documents import search_documents
 from mnemolet_core.core.utils.qdrant import QdrantManager
 
 app = FastAPI(title="MnemoLet API", version="0.0.1")
@@ -19,10 +18,17 @@ api_router = APIRouter()
 
 
 @api_router.post("/ingest")
-async def ingest_files(files: list[UploadFile] = File(...)):
+async def ingest_files(
+    files: list[UploadFile] = File(...),
+    force: bool = Query(
+        False, description="Recreate Qdrant collection before ingestion"
+    ),
+):
     """
     Ingest multiple files into Qdrant.
     """
+    from mnemolet_core.core.ingestion.ingest import ingest
+
     saved_files = []
 
     for f in files:
@@ -33,9 +39,22 @@ async def ingest_files(files: list[UploadFile] = File(...)):
 
         saved_files.append(str(dest))
 
-    # TODO: run_ingestion_on_directory(UPLOAD_DIR)
+    batch_size = 100  # TODO: move to config.toml
+    result = ingest(
+        UPLOAD_DIR, batch_size, QDRANT_URL, QDRANT_COLLECTION, SIZE_CHARS, force=force
+    )
 
-    return {"status": "ok", "uploaded": saved_files, "message": "Ingestion complete"}
+    return {
+        "status": "ok",
+        "uploaded": saved_files,
+        "force": force,
+        "message": "Ingestion complete",
+        "ingestion": {
+            "files": result["files"],
+            "chunks": result["chunks"],
+            "time": result["time"],
+        },
+    }
 
 
 @api_router.get("/search")
@@ -59,6 +78,8 @@ def do_search(
     embed_model: str = EMBED_MODEL,
     top_k: int = TOP_K,
 ):
+    from mnemolet_core.core.query.retrieval.search_documents import search_documents
+
     try:
         results = search_documents(
             qdrant_url=QDRANT_URL,
@@ -99,6 +120,8 @@ def get_answer(
     """
     Generate answer from local LLM.
     """
+    from mnemolet_core.core.query.generation.generate_answer import generate_answer
+
     try:
         answer, sources = generate_answer(
             qdrant_url=QDRANT_URL,
