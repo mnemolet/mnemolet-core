@@ -27,6 +27,22 @@ async def ingest_files(
     """
     Ingest multiple files into Qdrant.
     """
+    saved_files, result = await do_ingestion(files, force)
+
+    return {
+        "status": "ok",
+        "uploaded": saved_files,
+        "force": force,
+        "message": "Ingestion complete",
+        "ingestion": {
+            "files": result["files"],
+            "chunks": result["chunks"],
+            "time": result["time"],
+        },
+    }
+
+
+async def do_ingestion(files, force: bool = False):
     from mnemolet_core.core.ingestion.ingest import ingest
 
     saved_files = []
@@ -44,17 +60,7 @@ async def ingest_files(
         UPLOAD_DIR, batch_size, QDRANT_URL, QDRANT_COLLECTION, SIZE_CHARS, force=force
     )
 
-    return {
-        "status": "ok",
-        "uploaded": saved_files,
-        "force": force,
-        "message": "Ingestion complete",
-        "ingestion": {
-            "files": result["files"],
-            "chunks": result["chunks"],
-            "time": result["time"],
-        },
-    }
+    return saved_files, result
 
 
 @api_router.get("/search")

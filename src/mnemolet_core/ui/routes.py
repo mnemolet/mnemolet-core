@@ -1,8 +1,14 @@
-from fastapi import APIRouter, Form, Request
+from fastapi import APIRouter, File, Form, Request, UploadFile
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
-from mnemolet_core.api.routes import do_search, get_answer, get_collections, get_stats
+from mnemolet_core.api.routes import (
+    do_ingestion,
+    do_search,
+    get_answer,
+    get_collections,
+    get_stats,
+)
 
 ui_router = APIRouter()
 
@@ -15,6 +21,25 @@ API_BASE = "http://localhost:8000"  # TODO: hardcoded url
 async def home(request: Request):
     return templates.TemplateResponse(
         "index.html", {"request": request, "result": None, "error": None}
+    )
+
+
+@ui_router.get("/ingest", response_class=HTMLResponse)
+async def ingest_form(request: Request):
+    return templates.TemplateResponse("ingest.html", {"request": request})
+
+
+@ui_router.post("/ingest", response_class=HTMLResponse)
+async def ingest_submit(request: Request, files: list[UploadFile] = File(...)):
+    saved_files, result = await do_ingestion(files, force=False)
+
+    return templates.TemplateResponse(
+        "ingest.html",
+        {
+            "request": request,
+            "saved": saved_files,
+            "result": result,
+        },
     )
 
 
@@ -33,13 +58,25 @@ async def list_collections_ui(request: Request):
 
 @ui_router.get("/stats", response_class=HTMLResponse)
 async def stats_ui(request: Request, collection_name: str = "documents"):
-    data = get_stats(collection_name)
+    stats = {}
+    status = None
+    error = None
+
+    try:
+        data = get_stats(collection_name)
+        stats = data.get("data", {})
+        status = data.get("status", {})
+        error = None
+    except Exception as e:
+        error = f"Failed to fetch stats: {str(e)}"
+
     return templates.TemplateResponse(
         "stats.html",
         {
             "request": request,
-            "stats": data.get("data", []),
-            "status": data.get("status"),
+            "stats": stats,
+            "status": status,
+            "error": error,
             "collection_name": collection_name,
         },
     )

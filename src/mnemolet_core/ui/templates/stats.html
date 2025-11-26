@@ -5,6 +5,12 @@
 {% block content %}
     <h2 class="text-3xl font-bold mb-4 text-gray-800">Statistics for "{{ collection_name }}"</h2>
 
+    {% if error %}
+    <div class="p-4 mb-4 text-red-800 bg-red-100 border border-red-300 rounded">
+        {{ error }}
+    </div>
+    {% endif %}
+
     {% if stats %}
     <table class="table-auto border-collapse border border-gray-300 w-full bg-white">
         <thead>
