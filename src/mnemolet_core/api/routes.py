@@ -1,3 +1,5 @@
+from typing import Any
+
 from fastapi import APIRouter, FastAPI, File, HTTPException, Query, UploadFile
 
 from mnemolet_core.config import (
@@ -122,14 +124,16 @@ def get_answer(
     ollama_url: str = OLLAMA_URL,
     ollama_model: str = OLLAMA_MODEL,
     top_k: int = TOP_K,
-):
+) -> dict[str, Any]:
     """
     Generate answer from local LLM.
     """
     from mnemolet_core.core.query.generation.generate_answer import generate_answer
 
+    answer_chunks = []
+    sources_list = []
     try:
-        answer, sources = generate_answer(
+        for answer, sources in generate_answer(
             qdrant_url=QDRANT_URL,
             collection_name=QDRANT_COLLECTION,
             embed_model=EMBED_MODEL,
@@ -138,8 +142,15 @@ def get_answer(
             query=query,
             top_k=top_k,
             min_score=MIN_SCORE,
-        )
-        return {"answer": answer, "sources": sources}
+        ):
+            if answer:
+                answer_chunks.append(answer)
+            elif sources:
+                sources_list = sources
+
+        full_answer = "".join(answer_chunks)
+
+        return {"answer": full_answer, "sources": sources_list}
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Generating answer failed: {str(e)}"
