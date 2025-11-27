@@ -1,3 +1,5 @@
+import logging
+
 import click
 
 from mnemolet_core.config import (
@@ -10,6 +12,8 @@ from mnemolet_core.config import (
 )
 
 from .utils import requires_qdrant
+
+logger = logging.getLogger(__name__)
 
 
 @click.command()
@@ -45,7 +49,10 @@ def answer(
     from mnemolet_core.core.query.generation.generate_answer import generate_answer
 
     click.echo("Generating answer..")
-    answer, results = generate_answer(
+
+    final_results = []
+
+    for chunk, results in generate_answer(
         qdrant_url=QDRANT_URL,
         collection_name=QDRANT_COLLECTION,
         embed_model=EMBED_MODEL,
@@ -54,12 +61,15 @@ def answer(
         query=query,
         top_k=top_k,
         min_score=min_score,
-    )
+    ):
+        if results is None:
+            click.echo(chunk, nl=False)
+        else:
+            final_results = results
 
-    click.echo("\nAnswer:\n")
-    click.echo(answer)
+    click.echo("\n")
 
-    if results:
+    if final_results:
         click.echo("\nSources:\n")
-        for i, r in enumerate(results, start=1):
+        for i, r in enumerate(final_results, start=1):
             click.echo(f"{i}. {r['path']} (score={r['score']:.4f})")

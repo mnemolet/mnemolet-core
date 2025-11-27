@@ -1,4 +1,5 @@
 import logging
+from typing import Generator, Optional, Tuple
 
 from mnemolet_core.core.query.generation.local_generator import LocalGenerator
 from mnemolet_core.core.query.retrieval.search_documents import search_documents
@@ -16,7 +17,7 @@ def generate_answer(
     query: str,
     top_k: int,
     min_score: float,
-) -> tuple[str, list[dict]]:
+) -> Generator[Tuple[str, Optional[list[dict]]], None, None]:
     """
     Wrapper around LocalGenerator.
     """
@@ -28,16 +29,20 @@ def generate_answer(
     filtered_results = filter_by_min_score(results, min_score)
 
     if not filtered_results:
-        return "No relevant information found.", []
+        yield "No relevant information found.", []
+        return
 
     generator = LocalGenerator(ollama_url, model)
     context_chunks = [r["text"] for r in filtered_results]
     logger.info("Generating answer..")
 
-    answer = generator.generate_answer(query, context_chunks)
-    results = _only_unique(filtered_results)
+    # strem all chunks directly
+    yield from (
+        (chunk, None) for chunk in generator.generate_answer(query, context_chunks)
+    )
 
-    return answer, results
+    # finally send sources
+    yield "", _only_unique(filtered_results)
 
 
 def _only_unique(xz: list) -> list:

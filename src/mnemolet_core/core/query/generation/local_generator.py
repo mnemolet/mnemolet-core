@@ -1,5 +1,6 @@
 import json
 import logging
+from typing import Generator
 
 import requests
 
@@ -15,7 +16,9 @@ class LocalGenerator:
         self.ollama_url = ollama_url
         self.model = model
 
-    def generate_answer(self, query: str, context_chunks: list[str]) -> str:
+    def generate_answer(
+        self, query: str, context_chunks: list[str]
+    ) -> Generator[str, None, None]:
         """
         Generate an answer.
         """
@@ -25,23 +28,38 @@ class LocalGenerator:
         context = "\n\n".join(context_chunks)
         prompt = f"Context:\n{context}\n\nQuestion:\n{query}\n\nAnswer concisely:"
 
+        payload = {
+            "model": self.model,
+            "prompt": prompt,
+            "stream": True,
+            "options": {"keep_alive": "10m"},
+        }
+
         try:
             response = requests.post(
-                f"{self.ollama_url}/api/generate",
-                json={
-                    "model": self.model,
-                    "prompt": prompt,
-                    "stream": False,
-                },
+                f"{self.ollama_url}/api/generate", json=payload, stream=True
             )
             response.raise_for_status()  # raise for non 200 status
-            data = response.json()
-            return data.get("response", "").strip()
+
+            for line in response.iter_lines(decode_unicode=True, chunk_size=1):
+                if not line:
+                    continue
+
+                try:
+                    chunk = json.loads(line)
+
+                    if "response" in chunk:
+                        yield chunk["response"]
+
+                    if chunk.get("done"):
+                        break
+
+                except json.JSONDecodeError as e:
+                    logger.error(
+                        f"JSON decode failed: {e}. Raw response: {response.text[:1000]}"
+                    )
+                    raise RuntimeError(f"Invalid JSON response from Ollama: {e}") from e
+                    continue
         except requests.RequestException as e:
             logger.error(f"Request failed: {e}")
             raise RuntimeError(f"Failed to generate answer: {e}") from e
-        except json.JSONDecodeError as e:
-            logger.error(
-                f"JSON decode failed: {e}. Raw response: {response.text[:1000]}"
-            )
-            raise RuntimeError(f"Invalid JSON response from Ollama: {e}") from e
