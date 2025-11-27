@@ -5,11 +5,11 @@
 {% block content %}
     <h2 class="text-3xl font-bold mb-4 text-gray-800">Generated Answer</h2>
 
-    <form method="post" class="mb-6">
+    <form id="query-form" class="mb-6">
     <input
         type="text"
+        id="query"
         name="query"
-        value="{{ query | default('') }}"
         placeholder="Enter your question..."
         class="border border-gray-300 rounded px-4 py-2 w-full max-w-lg"
         required
@@ -22,32 +22,72 @@
     </button>
     </form>
 
-    {% if answer %}
-        <div class="bg-white rounded shadow p-6">
-            <h3 class="text-xl font-semibold mb-2">Answer:</h3>
-            <p class="text-gray-700 whitespace-pre-wrap">{{ answer }}</p>
-        </div>
-        {% if sources %}
-            <div class="bg-white rouded shadow p6">
-                <h3 class="text-xl font-semibold mb-2">Sources:</h3>
-                <ul class="space-y-4">
-                    {% for s in sources %}
-                        <li class="p-4 border border-gray-200 rounded-lg bg-gray-50">
-                            <div class="flex justify-between items-center mb-1">
-                                <span class="font-semibold text-gray-700">
-                                    {{ loop.index }}. {{ s.get("path") or "Source" }}
-                                </span>
+    <div id="answer" class="bg-white rounded shadow p-6 text-gray-700
+             whitespace-pre-wrap min-h-[120px]"></div>
+    <ul id="sources" class="bg-gray-50 rounded shadow p-6 mt-4 space-y-2"></ul>
 
-                            {% if s.get("score") %}
-                            <span class="text-sm text-gray-500">
-                                Score: {{ s.score }}
-                            </span>
-                            {% endif %}
-                            </div>
-                        </li>
-                    {% endfor %}
-                </ul>
-            </div>
-        {% endif %}
-    {% endif %}
+<script>
+const form = document.getElementById('query-form');
+const queryInput = document.getElementById('query');
+const answerEl = document.getElementById('answer');
+const sourcesEl = document.getElementById('sources');
+const submitBtn = form.querySelector('button');
+
+form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const query = queryInput.value.trim();
+    if (!query) return;
+
+    // clear previous content
+    answerEl.textContent = '';
+    sourcesEl.innerHTML = '';
+    sourcesEl.style.display = 'none';
+
+    submitBtn.disabled = true;
+
+    const response = await fetch(`/api/answer?query=${encodeURIComponent(query)}`);
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+
+        let lines = buffer.split(/r?\n/);
+        buffer = lines.pop();
+
+        for (const line of lines) {
+            if (!line.trim()) continue; // skip empty lines
+        
+            try {
+                const event = JSON.parse(line.trim());
+
+                if (event.type === 'chunk') {
+                    answerEl.textContent += event.data;
+                }
+                
+                if (event.type === 'sources') {
+                    sourcesEl.style.display = 'block';
+                    sourcesEl.innerHTML = '<h3 class="font-semibold mb-2">Sources:</h3>' + 
+                        '<ul class="list-disc pl-6">' + 
+                        event.data.map((s, i) => `<li>${i + 1}. ${s.path || 'Source'}</li>`).join('') +
+                        '</ul>';
+                }
+
+                if (event.type === 'error') {
+                    answerEl.textContent += `\n[Error]: ${event.data}`
+                }
+            } catch (err) {
+                console.error('JSON parse error:', err)
+                console.error('Failing line:', line)
+                answerEl.textContent += line;
+            }
+        }
+    }
+    submitBtn.disabled = false;
+});
+</script>
 {% endblock %}

@@ -1,6 +1,16 @@
+import json
+import logging
 from typing import Any
 
-from fastapi import APIRouter, FastAPI, File, HTTPException, Query, UploadFile
+from fastapi import (
+    APIRouter,
+    FastAPI,
+    File,
+    HTTPException,
+    Query,
+    UploadFile,
+)
+from fastapi.responses import StreamingResponse
 
 from mnemolet_core.config import (
     EMBED_MODEL,
@@ -14,6 +24,8 @@ from mnemolet_core.config import (
     UPLOAD_DIR,
 )
 from mnemolet_core.core.utils.qdrant import QdrantManager
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="MnemoLet API", version="0.0.1")
 api_router = APIRouter()
@@ -111,8 +123,17 @@ def answer(
     ollama_model: str = OLLAMA_MODEL,
     top_k: int = TOP_K,
 ):
-    return get_answer(
-        query, qdrant_url, collection_name, embed_model, ollama_url, ollama_model, top_k
+    return StreamingResponse(
+        get_answer(
+            query,
+            qdrant_url,
+            collection_name,
+            embed_model,
+            ollama_url,
+            ollama_model,
+            top_k,
+        ),
+        media_type="application/json",
     )
 
 
@@ -130,10 +151,8 @@ def get_answer(
     """
     from mnemolet_core.core.query.generation.generate_answer import generate_answer
 
-    answer_chunks = []
-    sources_list = []
     try:
-        for answer, sources in generate_answer(
+        for chunk, sources in generate_answer(
             qdrant_url=QDRANT_URL,
             collection_name=QDRANT_COLLECTION,
             embed_model=EMBED_MODEL,
@@ -143,18 +162,19 @@ def get_answer(
             top_k=top_k,
             min_score=MIN_SCORE,
         ):
-            if answer:
-                answer_chunks.append(answer)
+            if chunk:
+                # answer_chunks.append(answer)
+                logger.info(f"Chunk: {chunk}")
+                yield (json.dumps({"type": "chunk", "data": chunk}) + "\n").encode(
+                    "utf-8"
+                )
             elif sources:
-                sources_list = sources
+                yield (json.dumps({"type": "sources", "data": sources}) + "\n").encode(
+                    "utf-8"
+                )
 
-        full_answer = "".join(answer_chunks)
-
-        return {"answer": full_answer, "sources": sources_list}
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Generating answer failed: {str(e)}"
-        )
+        yield json.dumps({"type": "error", "data": str(e)}) + "\n"
 
 
 @api_router.get("/stats")
