@@ -98,6 +98,7 @@ def register_commands():
     cli.add_command(lazy_import("mnemolet_core.cli.commands.list", "list_collections"))
     cli.add_command(lazy_import("mnemolet_core.cli.commands.remove", "remove"))
     cli.add_command(lazy_import("mnemolet_core.cli.commands.serve", "serve"))
+    cli.add_command(lazy_import("mnemolet_core.cli.commands.dashboard", "dashboard"))
 
 
 register_commands()

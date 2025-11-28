@@ -8,6 +8,10 @@ from mnemolet_core.api.routes import (
     get_collections,
     get_stats,
 )
+from mnemolet_core.config import (
+    OLLAMA_URL,
+    QDRANT_URL,
+)
 
 ui_router = APIRouter()
 
@@ -18,8 +22,17 @@ API_BASE = "http://localhost:8000"  # TODO: hardcoded url
 
 @ui_router.get("/", response_class=HTMLResponse)
 async def home(request: Request):
+    from mnemolet_core.core.health.checks import get_status
+
+    try:
+        result = get_status(QDRANT_URL, OLLAMA_URL)
+        error = None
+    except Exception as e:
+        result = None
+        error = str(e)
+
     return templates.TemplateResponse(
-        "index.html", {"request": request, "result": None, "error": None}
+        "index.html", {"request": request, "result": result, "error": error}
     )
 
 
