@@ -110,7 +110,7 @@ def do_search(
         )
         return {"results": results}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Search failed: {e}")
 
 
 @api_router.get("/answer")
@@ -191,7 +191,7 @@ def get_stats(collection_name: str):
         stats = qm.get_collection_stats(collection_name)
         return {"status": "success", "data": stats}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to fetch stats:{str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch stats: {e}")
 
 
 @api_router.get("/list-collections")
@@ -214,6 +214,11 @@ def get_collections():
             }
         return {"status": "success", "collections": xz}
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to list collections:{str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to list collections: {e}")
+
+
+@api_router.get("/dashboard")
+def dashboard():
+    from mnemolet_core.core.health.checks import get_status
+
+    return get_status(QDRANT_URL, OLLAMA_URL)
