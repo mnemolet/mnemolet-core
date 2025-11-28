@@ -4,4 +4,66 @@
 
 {% block content %}
 
+<h2 class="text-3xl font-bold mb-4 text-gray-800">Dashboard</h2>
+
+{% if error %}
+<div class="bg-red-200 text-red-800 p-4 rounded mb-6">
+    Error loading dashboard: {{ error }}
+</div>
+{% endif %}
+
+{% if result %}
+<!-- Services -->
+<div class="mb-6">
+    <h2 class="text-xl font-semibold mb-2">Services</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="p-4 bg-white rounded shadow">
+            <span class="font-semibold">Qdrant:</span>
+            <span class="{{ 'text-green-600' if result.qdrant else 'text-red-600' }}">
+                {{ 'Running' if result.qdrant else  'Down' }}
+            </span>
+        </div>
+        <div class="p-4 bg-white rounded shadow">
+            <span class="font-semibold">Ollama:</span>
+            <span class="{{ 'text-green-600' if result.ollama.running else 'text-red-600' }}">
+                {{ 'Running' if result.ollama.running else 'Down' }}
+            </span>
+            {% if result.ollama.version %}
+                <div class="text-gray-500 text-sm">Version: {{ result.ollama.version }}</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Python -->
+<div class="mb-6">
+    <h2 class="text-xl font-semibold mb-2">Python</h2>
+    <div class="p-4 bg-white rounded shadow grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div><span class="font-semibold">Version:</span> {{ result.python_version.version }}</div>
+        <div><span class="font-semibold">Implementation:</span> {{ result.python_version.implementation }}</div>
+        <div><span class="font-semibold">Compiler:</span> {{ result.python_version.compiler }}</div>
+    </div>
+</div>
+
+<!-- System -->
+<!-- Memory -->
+<div class="mb-6">
+    <h2 class="text-xl font-semibold mb-2">Memory</h2>
+    <div class="p-4 bg-white rounded shadow grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div><span class="font-semibold">Total (GB):</span> {{ result.memory.total_gb }}</div>
+        <div><span class="font-semibold">Used (GB):</span> {{ result.memory.used_gb }}</div>
+        <div><span class="font-semibold">Usage %:</span> {{ result.memory.percent }}%</div>
+    </div>
+</div>
+
+<!-- CPU -->
+<div class="mb-6">
+    <h2 class="text-xl font-semibold mb-2">CPU</h2>
+    <div class="p-4 bg-white rounded shadow grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div><span class="font-semibold">Usage %:</span> {{ result.cpu.usage_percent }}</div>
+        <div><span class="font-semibold">Load Avg:</span> {{ result.cpu.load_avg }}</div>
+    </div>
+</div>
+{% endif %}
+
 {% endblock %}

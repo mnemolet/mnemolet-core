@@ -3,8 +3,8 @@ import json
 import click
 
 from mnemolet_core.config import (
-    QDRANT_URL,
     OLLAMA_URL,
+    QDRANT_URL,
 )
 
 

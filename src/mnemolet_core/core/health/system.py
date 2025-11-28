@@ -21,7 +21,8 @@ def get_memory_stats() -> dict:
 
 
 def get_cpu_stats() -> dict:
+    load = [round(x, 2) for x in psutil.getloadavg()]
     return {
         "usage_percent": psutil.cpu_percent(interval=0.2),
-        "load_avg": psutil.getloadavg(),
+        "load_avg": load,
     }
