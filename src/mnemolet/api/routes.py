@@ -13,6 +13,7 @@ from fastapi import (
 from fastapi.responses import StreamingResponse
 
 from mnemolet.config import (
+    BATCH_SIZE,
     EMBED_MODEL,
     MIN_SCORE,
     OLLAMA_MODEL,
@@ -69,7 +70,7 @@ async def do_ingestion(files, force: bool = False):
 
         saved_files.append(str(dest))
 
-    batch_size = 100  # TODO: move to config.toml
+    batch_size = BATCH_SIZE
     result = ingest(
         UPLOAD_DIR, batch_size, QDRANT_URL, QDRANT_COLLECTION, SIZE_CHARS, force=force
     )

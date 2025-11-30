@@ -2,6 +2,13 @@ import logging
 
 import click
 
+from mnemolet.config import (
+    BATCH_SIZE,
+    QDRANT_COLLECTION,
+    QDRANT_URL,
+    SIZE_CHARS,
+)
+
 from .utils import requires_qdrant
 
 logger = logging.getLogger(__name__)
@@ -13,7 +20,10 @@ logger = logging.getLogger(__name__)
     "--force", is_flag=True, help="Recreate Qdrant collection and reindex all files."
 )
 @click.option(
-    "--batch-size", default=100, show_default=True, help="Number of chunks per batch."
+    "--batch-size",
+    default=BATCH_SIZE,
+    show_default=True,
+    help="Number of chunks per batch.",
 )
 @click.pass_context
 @requires_qdrant
@@ -22,11 +32,6 @@ def ingest(ctx, directory: str, force: bool, batch_size: int):
     Ingest files from a directory into Qdrant.
     - streams files, chunks them, embeds text and stores data in Qdrant.
     """
-    from mnemolet.config import (
-        QDRANT_COLLECTION,
-        QDRANT_URL,
-        SIZE_CHARS,
-    )
     from mnemolet.core.ingestion.ingest import ingest
 
     result = ingest(
