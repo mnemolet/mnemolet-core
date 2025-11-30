@@ -1,4 +1,4 @@
-from mnemolet_core.core.ingestion.preprocessor import chunk_text
+from mnemolet.core.ingestion.preprocessor import chunk_text
 
 
 def test_chunk_text():
