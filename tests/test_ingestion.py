@@ -1,9 +1,9 @@
 import tempfile
 from pathlib import Path
 
-from mnemolet_core.core.ingestion.preprocessor import process_directory
-from mnemolet_core.core.ingestion.utils import hash_file
-from mnemolet_core.core.storage.db_tracker import DBTracker
+from mnemolet.core.ingestion.preprocessor import process_directory
+from mnemolet.core.storage.db_tracker import DBTracker
+from mnemolet.core.utils.utils import hash_file
 
 
 def test_load_txt_files():

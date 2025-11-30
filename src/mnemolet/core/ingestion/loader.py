@@ -3,8 +3,8 @@ from collections.abc import Iterator
 from pathlib import Path
 
 from mnemolet.core.ingestion.extractors.registry import get_extractor
-from mnemolet.core.ingestion.utils import hash_file
 from mnemolet.core.storage.db_tracker import DBTracker
+from mnemolet.core.utils.utils import hash_file
 
 logger = logging.getLogger(__name__)
 
