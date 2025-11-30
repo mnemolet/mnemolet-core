@@ -24,6 +24,7 @@ QDRANT_URL = f"http://{QDRANT_HOST}:{QDRANT_PORT}"
 TOP_K = int(os.getenv("TOP_K", config["qdrant"].get("top_k", 5)))
 MIN_SCORE = float(os.getenv("MIN_SCORE", config["qdrant"].get("min_score", 0.35)))
 
+BATCH_SIZE = int(os.getenv("BATCH_SIZE", config["ingestion"].get("batch_size", 100)))
 # 1 MB == 1024 * 1024
 CHUNK_SIZE = int(
     os.getenv("CHUNK_SIZE", config["ingestion"].get("chunk_size", 1048576))

@@ -13,6 +13,7 @@ DEFAULT_CONFIG = {
         "min_score": 0.35,
     },
     "ingestion": {
+        "batch_size": 100,
         "chunk_size": 1048576,
         "size_chars": 3000,
     },
