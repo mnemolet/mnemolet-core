@@ -22,8 +22,8 @@ class LocalGenerator:
         """
         Generate an answer.
         """
-        if not context_chunks:
-            return "No relevant context found."
+        # if not context_chunks:
+        #    return "No relevant context found."
 
         context = "\n\n".join(context_chunks)
         prompt = f"Context:\n{context}\n\nQuestion:\n{query}\n\nAnswer concisely:"

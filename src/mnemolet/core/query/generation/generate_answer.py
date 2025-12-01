@@ -17,32 +17,59 @@ def generate_answer(
     query: str,
     top_k: int,
     min_score: float,
+    chat: bool = False,  # default for answer endpoint
 ) -> Generator[Tuple[str, Optional[list[dict]]], None, None]:
     """
     Wrapper around LocalGenerator.
     """
     logger.info(f"Searching for top {top_k} results..")
+    # ------- Retrieval -------
     results = search_documents(
         qdrant_url, collection_name, embed_model, query, top_k=top_k
     )
 
     filtered_results = filter_by_min_score(results, min_score)
 
-    if not filtered_results:
-        yield "No relevant information found.", []
+    # ------- Answer mode -------
+    if not chat:
+        if not filtered_results:
+            yield "No relevant information found.", []
+            return
+
+        generator = LocalGenerator(ollama_url, model)
+        context_chunks = [r["text"] for r in filtered_results]
+        logger.info("Generating answer..")
+
+        # strem all chunks directly
+        yield from (
+            (chunk, None) for chunk in generator.generate_answer(query, context_chunks)
+        )
+
+        # finally send sources
+        yield "", _only_unique(filtered_results)
         return
 
+    # ------- Chat mode -------
+    if filtered_results:
+        logger.info("Relevant context found for chat.")
+        context_chunks = [r["text"] for r in filtered_results]
+    else:
+        logger.info("No relevant context found; continue chat without context.")
+        context_chunks = []
+
     generator = LocalGenerator(ollama_url, model)
-    context_chunks = [r["text"] for r in filtered_results]
-    logger.info("Generating answer..")
 
-    # strem all chunks directly
-    yield from (
-        (chunk, None) for chunk in generator.generate_answer(query, context_chunks)
-    )
+    logger.info("Generating chat response...")
 
-    # finally send sources
-    yield "", _only_unique(filtered_results)
+    # stream LLM output
+    for c in generator.generate_answer(query, context_chunks):
+        yield c, None
+
+    # return sources only if we had any
+    if filtered_results:
+        yield "", _only_unique(filtered_results)
+    else:
+        yield "", []
 
 
 def _only_unique(xz: list) -> list:
