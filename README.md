@@ -46,29 +46,19 @@ MnemoLet requires Python and [uv](https://uv.run/) for managing virtual environm
 
 `git clone https://github.com/mnemolet/mnemolet-core.git`
 
-2. **create virtual environment**
+2. **install dependencies**
 
-`uv init`
+`uv sync`
 
-3. **activate virtual environment**
-
-`source .venv/bin/activate`
-
-on Windows: `.\venv\Scripts\activate`
-
-4. **install the project in editable mode**
+3. install the project in editable mode
 
 `uv pip install -e .`
 
-5. **verify installation**
+3. **verify installation**
 
 `mnemolet --version`
 
 `mnemolet --help`
-
-6. [optional] **install dev dependencies**
-
-`uv sync`
 
 ## Configuration
 
@@ -82,6 +72,13 @@ Below is default configuration:
 host = "localhost"
 port = 6333
 collection = "documents"
+top_k = 5
+min_score = 0.35
+
+[ingestion]
+batch_size = 100
+chunk_size = 1048576 # 1Mb
+size_chars = 3000
 
 [embedding]
 model = "all-MiniLM-L6-v2"
@@ -90,9 +87,11 @@ batch_size = 100
 [ollama]
 host = "localhost"
 port = 11434
+model = "llama3"
 
 [storage]
 db_path = "./data/tracker.sqlite"
+upload_dir = "./data/uploads"
 ```
 
 ## CLI
@@ -105,7 +104,7 @@ db_path = "./data/tracker.sqlite"
 
 or
 
-`uv run python -m mnemolet_core.cli.main --version`
+`uv run python -m mnemolet.cli.main --version`
 
 ### Help
 
@@ -113,7 +112,23 @@ or
 
 or
 
-`uv run python -m mnemolet_core.cli.main --help`
+`uv run python -m mnemolet.cli.main --help`
+
+### Dashboard: Show system and service health status.
+
+`mnemolet dashboard`
+
+### Init-config: Generate a default config.toml file.
+
+`mnemolet init-config`
+
+### List-collections: List all Qdrant collections.
+
+`mnemolet list-collections`
+
+### Remove: Remove Qdrant collection.
+
+`mnemolet remove <collection_name> STR`
 
 ### Ingest Files
 
@@ -121,13 +136,13 @@ or
 
 or
 
-`uv run python -m mnemolet_core.cli.main ingest <directory>`
+`uv run python -m mnemolet.cli.main ingest <directory>`
 
 or
 
 add `--force` to re-ingest files and recreate Qdrant collection
 
-`uv run python -m mnemolet_core.cli.main ingest <directory> --force`
+`uv run python -m mnemolet.cli.main ingest <directory> --force`
 
 `-v` - optional verbosity flag (can be repeated as -vv for debug mode)
 
@@ -141,7 +156,7 @@ add `--force` to re-ingest files and recreate Qdrant collection
 
 or
 
-`uv run python -m mnemolet_core.cli.main search "<query>"`
+`uv run python -m mnemolet.cli.main search "<query>"`
 
 - `--top-k <INT>` - optional number of results to retrieve
 
@@ -157,7 +172,7 @@ or
 
 or
 
-`uv run python -m mnemolet_core.cli.main answer "<query>"`
+`uv run python -m mnemolet.cli.main answer "<query>"`
 
 - `--top-k <INT>` - optional number of results to retrieve
 
