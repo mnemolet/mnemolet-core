@@ -3,7 +3,7 @@ from typing import Generator, Optional, Tuple
 
 from mnemolet.core.query.generation.local_generator import LocalGenerator
 from mnemolet.core.query.retrieval.search_documents import search_documents
-from mnemolet.core.utils.utils import filter_by_min_score
+from mnemolet.core.utils.utils import _only_unique, filter_by_min_score
 
 logger = logging.getLogger(__name__)
 
@@ -100,18 +100,3 @@ def _yield_sources_if_any(
     if filtered_results:
         return "", _only_unique(filtered_results)
     return "", []
-
-
-def _only_unique(xz: list) -> list:
-    """
-    Helper fn to return only unique results by file path.
-    """
-    unique = []
-    seen = set()
-
-    for x in xz:
-        path = x["path"]
-        if path not in seen:
-            seen.add(path)
-            unique.append(x)
-    return unique
