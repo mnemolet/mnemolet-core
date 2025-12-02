@@ -2,31 +2,24 @@ import logging
 from typing import Generator, Optional, Tuple
 
 from mnemolet.core.query.generation.local_generator import LocalGenerator
-from mnemolet.core.query.retrieval.search_documents import search_documents
-from mnemolet.core.utils.utils import _only_unique, filter_by_min_score
+from mnemolet.core.query.retrieval.retriever import Retriever
+from mnemolet.core.utils.utils import _only_unique
 
 logger = logging.getLogger(__name__)
 
 
 def generate_answer(
-    qdrant_url: str,
-    collection_name: str,
-    embed_model: str,
+    retriever: Retriever,
     ollama_url: str,
     model: str,
     query: str,
-    top_k: int,
-    min_score: float,
     chat: bool = False,  # default for answer endpoint
 ) -> Generator[Tuple[str, Optional[list[dict]]], None, None]:
     """
     Wrapper around LocalGenerator.
     """
-    logger.info(f"Searching for top {top_k} results..")
     # ------- Retrieval -------
-    filtered_results = _retrieve_context(
-        qdrant_url, collection_name, embed_model, query, top_k, min_score
-    )
+    filtered_results = retriever.retrieve(query)
 
     # ------- Answer mode -------
     if not chat:
@@ -64,6 +57,7 @@ def generate_answer(
     yield _yield_sources_if_any(filtered_results)
 
 
+"""
 def _retrieve_context(
     qdrant_url: str,
     collection_name: str,
@@ -72,13 +66,11 @@ def _retrieve_context(
     top_k: int,
     min_score: float,
 ) -> list[dict]:
-    """
-    Helper fn for retrieving and filter context chunks from Qdrant.
-    """
     results = search_documents(
         qdrant_url, collection_name, embed_model, query, top_k=top_k
     )
     return filter_by_min_score(results, min_score)
+"""
 
 
 def _generate_llm_chunks(

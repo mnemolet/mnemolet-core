@@ -47,29 +47,32 @@ def answer(
     Search Qdrant and generate an answer using local LLM.
     """
     from mnemolet.core.query.generation.generate_answer import generate_answer
+    from mnemolet.core.query.retrieval.retriever import Retriever, RetrieverConfig
 
-    click.echo("Generating answer..")
-
-    final_results = []
-
-    for chunk, results in generate_answer(
+    retriever_cfg = RetrieverConfig(
         qdrant_url=QDRANT_URL,
         collection_name=QDRANT_COLLECTION,
         embed_model=EMBED_MODEL,
+        top_k=top_k,
+        min_score=min_score,
+    )
+    retriever = Retriever(retriever_cfg)
+
+    click.echo("Generating answer..")
+
+    for chunk, sources in generate_answer(
+        retriever=retriever,
         ollama_url=OLLAMA_URL,
         model=ollama_model,
         query=query,
-        top_k=top_k,
-        min_score=min_score,
     ):
-        if results is None:
+        if sources is None:
             click.echo(chunk, nl=False)
-        else:
-            final_results = results
 
     click.echo("\n")
 
-    if final_results:
+    # retrieve sources from results
+    if sources:
         click.echo("\nSources:\n")
-        for i, r in enumerate(final_results, start=1):
+        for i, r in enumerate(sources, start=1):
             click.echo(f"{i}. {r['path']} (score={r['score']:.4f})")

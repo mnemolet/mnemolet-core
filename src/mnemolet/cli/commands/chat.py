@@ -44,15 +44,21 @@ def chat(ollama_url: str, top_k: int, ollama_model: str, min_score: float):
     Start interactive chat session with the local LLM.
     """
     from mnemolet.core.query.generation.chat_session import ChatSession
+    from mnemolet.core.query.retrieval.retriever import Retriever, RetrieverConfig
 
-    session = ChatSession(
-        ollama_url=ollama_url,
-        ollama_model=ollama_model,
-        top_k=top_k,
-        min_score=min_score,
+    retriever_cfg = RetrieverConfig(
         qdrant_url=QDRANT_URL,
         collection_name=QDRANT_COLLECTION,
         embed_model=EMBED_MODEL,
+        top_k=top_k,
+        min_score=min_score,
+    )
+    retriever = Retriever(retriever_cfg)
+
+    session = ChatSession(
+        retriever=retriever,
+        ollama_url=ollama_url,
+        ollama_model=ollama_model,
     )
 
     click.echo("Starting chat. Type 'exit' to quit.\n")
