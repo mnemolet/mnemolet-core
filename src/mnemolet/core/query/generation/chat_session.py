@@ -37,8 +37,6 @@ class ChatSession:
         ):
             if sources is None:
                 # live streaming
-                # print(chunk, end="", flush=True)
-                # final_results.append(chunk)
                 yield chunk
                 final_results.append(chunk)
 

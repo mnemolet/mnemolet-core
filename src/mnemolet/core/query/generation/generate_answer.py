@@ -24,11 +24,9 @@ def generate_answer(
     """
     logger.info(f"Searching for top {top_k} results..")
     # ------- Retrieval -------
-    results = search_documents(
-        qdrant_url, collection_name, embed_model, query, top_k=top_k
+    filtered_results = _retrieve_context(
+        qdrant_url, collection_name, embed_model, query, top_k, min_score
     )
-
-    filtered_results = filter_by_min_score(results, min_score)
 
     # ------- Answer mode -------
     if not chat:
@@ -36,17 +34,16 @@ def generate_answer(
             yield "No relevant information found.", []
             return
 
-        generator = LocalGenerator(ollama_url, model)
+        # generator = LocalGenerator(ollama_url, model)
         context_chunks = [r["text"] for r in filtered_results]
         logger.info("Generating answer..")
 
-        # strem all chunks directly
-        yield from (
-            (chunk, None) for chunk in generator.generate_answer(query, context_chunks)
-        )
+        # stream LLM output
+        for c in _generate_llm_chunks(ollama_url, model, query, context_chunks):
+            yield c, None
 
         # finally send sources
-        yield "", _only_unique(filtered_results)
+        yield _yield_sources_if_any(filtered_results)
         return
 
     # ------- Chat mode -------
@@ -57,19 +54,52 @@ def generate_answer(
         logger.info("No relevant context found; continue chat without context.")
         context_chunks = []
 
-    generator = LocalGenerator(ollama_url, model)
-
     logger.info("Generating chat response...")
 
     # stream LLM output
-    for c in generator.generate_answer(query, context_chunks):
+    for c in _generate_llm_chunks(ollama_url, model, query, context_chunks):
         yield c, None
 
     # return sources only if we had any
+    yield _yield_sources_if_any(filtered_results)
+
+
+def _retrieve_context(
+    qdrant_url: str,
+    collection_name: str,
+    embed_model: str,
+    query: str,
+    top_k: int,
+    min_score: float,
+) -> list[dict]:
+    """
+    Helper fn for retrieving and filter context chunks from Qdrant.
+    """
+    results = search_documents(
+        qdrant_url, collection_name, embed_model, query, top_k=top_k
+    )
+    return filter_by_min_score(results, min_score)
+
+
+def _generate_llm_chunks(
+    ollama_url: str, model: str, query: str, context_chunks: list[str]
+) -> Generator[str, None, None]:
+    """
+    Helper fn for streaming chunks from LocalGenerator.
+    """
+    generator = LocalGenerator(ollama_url, model)
+    yield from generator.generate_answer(query, context_chunks)
+
+
+def _yield_sources_if_any(
+    filtered_results: list[dict],
+) -> Tuple[str, Optional[list[dict]]]:
+    """
+    Return sources if they exist, else empty list.
+    """
     if filtered_results:
-        yield "", _only_unique(filtered_results)
-    else:
-        yield "", []
+        return "", _only_unique(filtered_results)
+    return "", []
 
 
 def _only_unique(xz: list) -> list:
