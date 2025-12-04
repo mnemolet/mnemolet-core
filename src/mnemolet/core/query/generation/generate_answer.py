@@ -1,7 +1,9 @@
 import logging
 from typing import Generator, Optional, Tuple
 
-from mnemolet.core.query.generation.local_generator import LocalGenerator
+from mnemolet.core.query.generation.local_generator import (
+    LocalGenerator,
+)
 from mnemolet.core.query.retrieval.retriever import Retriever
 from mnemolet.core.utils.utils import _only_unique
 
@@ -10,8 +12,7 @@ logger = logging.getLogger(__name__)
 
 def generate_answer(
     retriever: Retriever,
-    ollama_url: str,
-    model: str,
+    generator: LocalGenerator,
     query: str,
     chat: bool = False,  # default for answer endpoint
 ) -> Generator[Tuple[str, Optional[list[dict]]], None, None]:
@@ -32,7 +33,7 @@ def generate_answer(
         logger.info("Generating answer..")
 
         # stream LLM output
-        for c in _generate_llm_chunks(ollama_url, model, query, context_chunks):
+        for c in _generate_llm_chunks(generator, query, context_chunks):
             yield c, None
 
         # finally send sources
@@ -50,36 +51,19 @@ def generate_answer(
     logger.info("Generating chat response...")
 
     # stream LLM output
-    for c in _generate_llm_chunks(ollama_url, model, query, context_chunks):
+    for c in _generate_llm_chunks(generator, query, context_chunks):
         yield c, None
 
     # return sources only if we had any
     yield _yield_sources_if_any(filtered_results)
 
 
-"""
-def _retrieve_context(
-    qdrant_url: str,
-    collection_name: str,
-    embed_model: str,
-    query: str,
-    top_k: int,
-    min_score: float,
-) -> list[dict]:
-    results = search_documents(
-        qdrant_url, collection_name, embed_model, query, top_k=top_k
-    )
-    return filter_by_min_score(results, min_score)
-"""
-
-
 def _generate_llm_chunks(
-    ollama_url: str, model: str, query: str, context_chunks: list[str]
+    generator: LocalGenerator, query: str, context_chunks: list[str]
 ) -> Generator[str, None, None]:
     """
     Helper fn for streaming chunks from LocalGenerator.
     """
-    generator = LocalGenerator(ollama_url, model)
     yield from generator.generate_answer(query, context_chunks)
 
 

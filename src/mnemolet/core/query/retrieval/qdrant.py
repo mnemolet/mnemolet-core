@@ -4,7 +4,7 @@ from qdrant_client import QdrantClient
 from sentence_transformers import SentenceTransformer
 
 
-class QdrantRetriever:
+class Qdrant:
     def __init__(self, qdrant_url: str, collection_name, model: str):
         self.model = SentenceTransformer(model)
         self.client = QdrantClient(qdrant_url)

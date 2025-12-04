@@ -1,4 +1,4 @@
-from mnemolet.core.query.retrieval.qdrant_retriever import QdrantRetriever
+from mnemolet.core.query.retrieval.qdrant import Qdrant
 
 
 def search_documents(
@@ -7,6 +7,6 @@ def search_documents(
     """
     Wrapper around QdrantRetriever.
     """
-    xz = QdrantRetriever(qdrant_url, collection_name, embed_model)
+    xz = Qdrant(qdrant_url, collection_name, embed_model)
     results = xz.search(query, top_k)
     return results

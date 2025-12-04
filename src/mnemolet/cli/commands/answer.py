@@ -47,23 +47,24 @@ def answer(
     Search Qdrant and generate an answer using local LLM.
     """
     from mnemolet.core.query.generation.generate_answer import generate_answer
-    from mnemolet.core.query.retrieval.retriever import Retriever, RetrieverConfig
+    from mnemolet.core.query.generation.local_generator import get_llm_generator
+    from mnemolet.core.query.retrieval.retriever import get_retriever
 
-    retriever_cfg = RetrieverConfig(
-        qdrant_url=QDRANT_URL,
-        collection_name=QDRANT_COLLECTION,
-        embed_model=EMBED_MODEL,
+    retriever = get_retriever(
+        url=QDRANT_URL,
+        collection=QDRANT_COLLECTION,
+        model=EMBED_MODEL,
         top_k=top_k,
         min_score=min_score,
     )
-    retriever = Retriever(retriever_cfg)
+
+    generator = get_llm_generator(url=OLLAMA_URL, model=ollama_model)
 
     click.echo("Generating answer..")
 
     for chunk, sources in generate_answer(
         retriever=retriever,
-        ollama_url=OLLAMA_URL,
-        model=ollama_model,
+        generator=generator,
         query=query,
     ):
         if sources is None:

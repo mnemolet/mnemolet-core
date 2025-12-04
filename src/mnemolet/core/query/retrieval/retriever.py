@@ -31,3 +31,16 @@ class Retriever:
             self.cfg.top_k,
         )
         return filter_by_min_score(results, self.cfg.min_score)
+
+
+def get_retriever(
+    url: str, collection: str, model: str, top_k: int, min_score: float
+) -> Retriever:
+    cfg = RetrieverConfig(
+        qdrant_url=url,
+        collection_name=collection,
+        embed_model=model,
+        top_k=top_k,
+        min_score=min_score,
+    )
+    return Retriever(cfg)

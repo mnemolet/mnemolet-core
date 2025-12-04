@@ -1,4 +1,5 @@
 from mnemolet.core.query.generation.generate_answer import generate_answer
+from mnemolet.core.query.generation.local_generator import LocalGenerator
 from mnemolet.core.query.retrieval.retriever import Retriever
 
 
@@ -6,21 +7,18 @@ class ChatSession:
     def __init__(
         self,
         retriever: Retriever,
-        ollama_url: str,
-        ollama_model: str,
+        generator: LocalGenerator,
     ):
         self.history = []
         self.retriever = retriever
-        self.ollama_url = ollama_url
-        self.ollama_model = ollama_model
+        self.generator = generator
 
     def ask(self, query: str):
         results = []
 
         for chunk, sources in generate_answer(
             retriever=self.retriever,
-            ollama_url=self.ollama_url,
-            model=self.ollama_model,
+            generator=self.generator,
             query=query,
             chat=True,
         ):
