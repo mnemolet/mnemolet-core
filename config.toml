@@ -2,7 +2,7 @@
 host = "localhost"
 port = 6333
 collection = "documents"
-top_k = 5
+top_k = 3
 min_score = 0.35
 
 [ingestion]

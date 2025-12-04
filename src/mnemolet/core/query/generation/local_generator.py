@@ -1,5 +1,6 @@
 import json
 import logging
+from dataclasses import dataclass
 from typing import Generator
 
 import requests
@@ -7,14 +8,19 @@ import requests
 logger = logging.getLogger(__name__)
 
 
+@dataclass
+class LocalGeneratorConfig:
+    url: str
+    model: str
+
+
 class LocalGenerator:
     """
     Generate an answer using local LLM (via Ollama API).
     """
 
-    def __init__(self, ollama_url: str, model: str):
-        self.ollama_url = ollama_url
-        self.model = model
+    def __init__(self, cfg: LocalGeneratorConfig):
+        self.cfg = cfg
 
     def generate_answer(
         self, query: str, context_chunks: list[str]
@@ -22,14 +28,14 @@ class LocalGenerator:
         """
         Generate an answer.
         """
-        if not context_chunks:
-            return "No relevant context found."
+        # if not context_chunks:
+        #    return "No relevant context found."
 
         context = "\n\n".join(context_chunks)
         prompt = f"Context:\n{context}\n\nQuestion:\n{query}\n\nAnswer concisely:"
 
         payload = {
-            "model": self.model,
+            "model": self.cfg.model,
             "prompt": prompt,
             "stream": True,
             "options": {"keep_alive": "10m"},
@@ -37,7 +43,7 @@ class LocalGenerator:
 
         try:
             response = requests.post(
-                f"{self.ollama_url}/api/generate", json=payload, stream=True
+                f"{self.cfg.url}/api/generate", json=payload, stream=True
             )
             response.raise_for_status()  # raise for non 200 status
 
@@ -63,3 +69,11 @@ class LocalGenerator:
         except requests.RequestException as e:
             logger.error(f"Request failed: {e}")
             raise RuntimeError(f"Failed to generate answer: {e}") from e
+
+
+def get_llm_generator(url: str, model: str) -> LocalGenerator:
+    cfg = LocalGeneratorConfig(
+        url=url,
+        model=model,
+    )
+    return LocalGenerator(cfg)

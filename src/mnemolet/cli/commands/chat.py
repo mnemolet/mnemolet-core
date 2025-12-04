@@ -17,7 +17,6 @@ logger = logging.getLogger(__name__)
 
 
 @click.command()
-@click.argument("query", type=str)
 @click.option(
     "--top-k",
     default=TOP_K,
@@ -40,13 +39,11 @@ logger = logging.getLogger(__name__)
     "--min-score", default=MIN_SCORE, show_default=True, help="Minimum score threshold."
 )
 @requires_qdrant
-def answer(
-    ollama_url: str, query: str, top_k: int, ollama_model: str, min_score: float
-):
+def chat(ollama_url: str, top_k: int, ollama_model: str, min_score: float):
     """
-    Search Qdrant and generate an answer using local LLM.
+    Start interactive chat session with the local LLM.
     """
-    from mnemolet.core.query.generation.generate_answer import generate_answer
+    from mnemolet.core.query.generation.chat_session import ChatSession
     from mnemolet.core.query.generation.local_generator import get_llm_generator
     from mnemolet.core.query.retrieval.retriever import get_retriever
 
@@ -58,22 +55,26 @@ def answer(
         min_score=min_score,
     )
 
-    generator = get_llm_generator(url=OLLAMA_URL, model=ollama_model)
+    generator = get_llm_generator(OLLAMA_URL, ollama_model)
 
-    click.echo("Generating answer..")
-
-    for chunk, sources in generate_answer(
+    session = ChatSession(
         retriever=retriever,
         generator=generator,
-        query=query,
-    ):
-        if sources is None:
+    )
+
+    click.echo("Starting chat. Type 'exit' to quit.\n")
+
+    while True:
+        query = click.prompt("> ", type=str)
+
+        if query.lower() in ("exit", "quit", ":q"):
+            click.echo("Bye")
+            break
+
+        # stream response
+        click.echo("assistant: ", nl=False)
+
+        for chunk in session.ask(query):
             click.echo(chunk, nl=False)
 
-    click.echo("\n")
-
-    # retrieve sources from results
-    if sources:
-        click.echo("\nSources:\n")
-        for i, r in enumerate(sources, start=1):
-            click.echo(f"{i}. {r['path']} (score={r['score']:.4f})")
+    click.echo()

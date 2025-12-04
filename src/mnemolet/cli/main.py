@@ -99,6 +99,7 @@ def register_commands():
     cli.add_command(lazy_import("mnemolet.cli.commands.remove", "remove"))
     cli.add_command(lazy_import("mnemolet.cli.commands.serve", "serve"))
     cli.add_command(lazy_import("mnemolet.cli.commands.dashboard", "dashboard"))
+    cli.add_command(lazy_import("mnemolet.cli.commands.chat", "chat"))
 
 
 register_commands()

@@ -20,6 +20,21 @@ def filter_by_min_score(
     return filtered
 
 
+def _only_unique(xz: list) -> list:
+    """
+    Helper fn to return only unique results by file path.
+    """
+    unique = []
+    seen = set()
+
+    for x in xz:
+        path = x["path"]
+        if path not in seen:
+            seen.add(path)
+            unique.append(x)
+    return unique
+
+
 def hash_file(path: Path) -> str:
     """
     Return SHA256 hash of file content

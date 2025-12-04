@@ -151,17 +151,23 @@ def get_answer(
     Generate answer from local LLM.
     """
     from mnemolet.core.query.generation.generate_answer import generate_answer
+    from mnemolet.core.query.generation.local_generator import get_llm_generator
+    from mnemolet.core.query.retrieval.retriever import get_retriever
 
     try:
-        for chunk, sources in generate_answer(
-            qdrant_url=QDRANT_URL,
-            collection_name=QDRANT_COLLECTION,
-            embed_model=EMBED_MODEL,
-            ollama_url=OLLAMA_URL,
-            model=ollama_model,
-            query=query,
+        retriever = get_retriever(
+            url=QDRANT_URL,
+            collection=QDRANT_COLLECTION,
+            model=EMBED_MODEL,
             top_k=top_k,
             min_score=MIN_SCORE,
+        )
+        generator = get_llm_generator(OLLAMA_URL, ollama_model)
+
+        for chunk, sources in generate_answer(
+            retriever=retriever,
+            generator=generator,
+            query=query,
         ):
             if chunk:
                 # answer_chunks.append(answer)
