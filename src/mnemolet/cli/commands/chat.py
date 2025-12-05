@@ -2,6 +2,7 @@ import logging
 
 import click
 
+from mnemolet.cli.commands.chat_history import history
 from mnemolet.config import (
     EMBED_MODEL,
     MIN_SCORE,
@@ -16,7 +17,18 @@ from .utils import requires_qdrant
 logger = logging.getLogger(__name__)
 
 
-@click.command()
+@click.group()
+def chat():
+    """
+    Chat commands.
+    """
+    pass
+
+
+chat.add_command(history)
+
+
+@chat.command("start")
 @click.option(
     "--top-k",
     default=TOP_K,
@@ -39,7 +51,7 @@ logger = logging.getLogger(__name__)
     "--min-score", default=MIN_SCORE, show_default=True, help="Minimum score threshold."
 )
 @requires_qdrant
-def chat(ollama_url: str, top_k: int, ollama_model: str, min_score: float):
+def start(ollama_url: str, top_k: int, ollama_model: str, min_score: float):
     """
     Start interactive chat session with the local LLM.
     """

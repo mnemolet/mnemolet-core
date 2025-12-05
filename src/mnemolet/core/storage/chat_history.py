@@ -25,7 +25,7 @@ class ChatHistory(BaseSQLite):
         self._create_tables()
 
     def _create_tables(self):
-        with self.get_connection() as conn:
+        with self._get_connection() as conn:
             self.exec_schema(conn, SCHEMA)
 
     def create_session(self) -> str:

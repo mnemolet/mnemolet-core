@@ -28,5 +28,5 @@ class BaseSQLite:
         """
         Execute SQL schema in the given conn.
         """
-        conn.execute(schema)
+        conn.executescript(schema)
         logger.info("[BaseSQLite]: schema executed successfully")
