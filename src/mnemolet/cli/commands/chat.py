@@ -11,6 +11,7 @@ from mnemolet.config import (
     QDRANT_URL,
     TOP_K,
 )
+from mnemolet.core.storage.chat_history import ChatHistory
 
 from .utils import requires_qdrant
 
@@ -74,19 +75,36 @@ def start(ollama_url: str, top_k: int, ollama_model: str, min_score: float):
         generator=generator,
     )
 
+    history = ChatHistory()
+    session_id = history.create_session()
+    logger.info(f"Chat session started (id={session_id})\n")
+
     click.echo("Starting chat. Type 'exit' to quit.\n")
 
     while True:
-        query = click.prompt("> ", type=str)
+        try:
+            user_input = click.prompt("> ", type=str)
 
-        if query.lower() in ("exit", "quit", ":q"):
-            click.echo("Bye")
+            if user_input.lower() in ("exit", "quit", ":q"):
+                click.echo("Bye")
+                break
+
+            # save user msg
+            history.add_message(session_id, "user", user_input)
+
+            # stream response
+            click.echo("assistant: ", nl=False)
+            assistant_msg = ""
+
+            for chunk in session.ask(user_input):
+                click.echo(chunk, nl=False)
+                assistant_msg += chunk
+
+            # save assistant msg
+            history.add_message(session_id, "assistant", assistant_msg)
+
+            click.echo()
+
+        except (KeyboardInterrupt, EOFError):
+            click.echo("\n Exiting chat..")
             break
-
-        # stream response
-        click.echo("assistant: ", nl=False)
-
-        for chunk in session.ask(query):
-            click.echo(chunk, nl=False)
-
-    click.echo()
